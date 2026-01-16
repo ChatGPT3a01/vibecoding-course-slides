@@ -8,9 +8,7 @@
 
 ## 📚 專案簡介
 
-本專案是 **VibeCoding 氣圍編碼** 課程的完整教學簡報系統，採用純 HTML + CSS + JavaScript 打造，無需任何後端環境或編譯工具，可直接在瀏覽器中瀏覽。
-
-課程涵蓋 **Cursor、GitHub Copilot、Windsurf、Antigravity、Gemini Canvas、v0.dev、Lovable AI** 等 10+ 種前沿 AI 協作開發工具，完成 15+ 個實作案例。
+本專案是 **VibeCoding 氣圍編碼** 課程的完整教學簡報系統，課程涵蓋 **Cursor、GitHub Copilot、Windsurf、Antigravity、Gemini Canvas、v0.dev、Lovable AI** 等 10+ 種前沿 AI 協作開發工具，完成 15+ 個實作案例。
 
 ## 🎯 課程特色
 
