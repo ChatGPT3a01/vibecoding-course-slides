@@ -22,74 +22,59 @@
 
 ```
 VibeCoding_簡報專案/
-├── index.html                              # 📌 首頁導覽（必看！）
-├── Part0_課程導覽.html                     # 🎯 課程理念、架構、學習路徑 (5頁)
-├── Part1_VibeCoding基礎與提示工程.html      # 💬 核心思維、黃金公式、Gemini (10頁)
-├── Part2_AI協作開發工具.html                # 🛠️ Cursor、Copilot、Windsurf、Antigravity (20頁)
-├── Part3_無程式碼前端生成.html              # 🎨 Gemini Canvas、v0.dev、AI Studio (18頁)
-├── Part4_全端應用生成.html                  # ⚡ Lovable AI、資料庫整合、部署 (12頁)
-├── Part5_AI代理人與自動化.html              # 🤖 GAS、NotebookLM、AI Agent (15頁)
-├── Part6_進階應用與實戰.html                # 🚀 360°、影片、3D、手勢控制 (12頁)
-├── Part7_課程總結與展望.html                # 🎓 核心收穫、工具選擇、未來定位 (6頁)
+├── index.html                              # 📌 首頁導覽
+├── Part0_課程導覽.html                     # 🎯 課程理念、架構、學習路徑
+├── Part1_VibeCoding基礎與提示工程.html      # 💬 核心思維、黃金公式、Gemini & Gems
+├── Part2_Cursor.html                       # 🔥 AI 代碼生成、修改與重構
+├── Part3_GitHub_Copilot.html               # 🛠️ 六大核心功能、程式碼建議
+├── Part4_Windsurf.html                     # 🔥 Cascade、Flow Mode、實作專案
+├── Part5_Antigravity.html                  # ✨ Agent Mode、自動測試、教學工具箱
+├── Part6_無程式碼前端生成.html              # 🎨 Gemini Canvas、v0.dev、AI Studio
+├── Part7_全端應用生成.html                  # ⚡ Lovable AI、資料庫整合、部署
+├── Part8_進階應用與實戰.html                # 🚀 360°、影片、3D、手勢控制、UI/UX
+├── Part9_AI代理人與自動化.html              # 🤖 GAS、NotebookLM、AI Agent
+├── Part10_課程總結與展望.html               # 🎓 核心收穫、工具選擇、AI 時代定位
+├── Part11_部署教學.html                    # ✨ Google Sites、Netlify、GAS
 └── README.md                               # 📖 本說明文件
 ```
 
 ## 📖 課程內容概覽
 
 ### Part 0：課程導覽 🎯
-- 課程理念與學習目標
-- 完整架構與學習路徑
-- AI 協作開發工具生態系統
-- 適合對象與學習建議
+- 課程理念、架構、學習路徑、工具生態
 
 ### Part 1：VibeCoding 基礎與提示工程 💬
-- VibeCoding 核心思維
-- 提示工程黃金公式（5C + 4P）
-- Google Gemini 實戰應用
-- Gems 自訂助理創建
+- 核心思維、黃金公式、Gemini & Gems
 
-### Part 2：AI 協作開發工具 🛠️
-- **Cursor IDE** - AI 原生編輯器深度整合
-- **GitHub Copilot** - 程式碼自動補全與生成
-- **Windsurf** - 多模態開發環境
-- **Antigravity** - 下一代 AI 協作平台
+### Part 2：Cursor IDE 🔥
+- AI 代碼生成、代碼修改與重構
 
-### Part 3：無程式碼前端生成 🎨
-- **Gemini Canvas** - Google 視覺化開發工具（重點章節）
-- **v0.dev** - Vercel AI 驅動的 UI 生成
-- **AI Studio** - 快速原型設計
+### Part 3：GitHub Copilot 🛠️
+- 六大核心功能、程式碼建議
 
-### Part 4：全端應用秒速生成 ⚡
-- **Lovable AI** - 一句話生成完整應用
-- 資料庫整合與 API 設計
-- 一鍵部署與版本管理
+### Part 4：Windsurf 🔥
+- Cascade、Flow Mode、實作專案
 
-### Part 5：AI 代理人與自動化 🤖
-- **Google Apps Script** - 自動化工作流
-- **NotebookLM** - AI 知識管理與學習助手
-- AI Agent 實作案例
+### Part 5：Antigravity ✨
+- Agent Mode、自動測試、教學工具箱
 
-### Part 6：進階應用與實戰 🚀
-- 360° 全景互動
-- AI 影片生成與剪輯
-- 3D 模型與 AR 應用
-- 手勢控制與語音互動
-- UI/UX 最佳實踐
+### Part 6：無程式碼前端生成 🎨
+- Gemini Canvas、v0.dev、AI Studio
 
-### Part 7：課程總結與未來展望 🎓
-- 核心知識回顧
-- 工具選擇矩陣
-- AI 時代職涯定位
-- 持續學習資源
+### Part 7：全端應用秒速生成 ⚡
+- Lovable AI、資料庫整合、部署
 
-## 💻 技術特色
+### Part 8：進階應用與實戰 🚀
+- 360°、影片、3D、手勢控制、UI/UX
 
-- **純前端實作** - 無需後端，開箱即用
-- **響應式設計** - 完美支援各種螢幕尺寸
-- **流暢動畫** - CSS3 動畫與過渡效果
-- **鍵盤導航** - 支援方向鍵、空白鍵、ESC 等快捷鍵
-- **進度追蹤** - 視覺化進度條顯示
-- **模組化架構** - 每個 Part 獨立，易於維護
+### Part 9：AI 代理人與自動化 🤖
+- GAS、NotebookLM、AI Agent
+
+### Part 10：課程總結與展望 🎓
+- 核心收穫、工具選擇、AI 時代定位
+
+### Part 11：部署教學 ✨
+- Google Sites、Netlify、GAS
 
 ## ⌨️ 快捷鍵說明
 
@@ -100,21 +85,6 @@ VibeCoding_簡報專案/
 | `Home` | 跳到第一張 |
 | `End` | 跳到最後一張 |
 | `ESC` | 返回首頁 |
-
-## 🎨 設計風格
-
-- **配色方案**：紫色漸層主題 (#667eea → #764ba2)
-- **字體**：Microsoft JhengHei（繁體中文）+ Segoe UI（英文）
-- **視覺效果**：玻璃擬態、陰影、動畫過渡
-- **排版**：大標題、清晰層級、充足留白
-
-## 📱 相容性
-
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
-- ✅ 行動裝置瀏覽器
 
 ## 🤝 社群連結
 
