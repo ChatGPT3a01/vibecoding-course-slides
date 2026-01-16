@@ -34,33 +34,6 @@ VibeCoding_簡報專案/
 └── README.md                               # 📖 本說明文件
 ```
 
-## 🚀 快速開始
-
-### 方法一：直接開啟檔案（推薦）
-
-1. 下載或克隆本專案
-2. 用瀏覽器開啟 `index.html` 即可開始學習
-
-### 方法二：使用 GitHub Pages
-
-1. Fork 本專案到你的 GitHub 帳號
-2. 在 Repository Settings 中啟用 GitHub Pages
-3. 選擇 `main` 分支作為來源
-4. 等待部署完成，即可透過網址訪問
-
-### 方法三：本地伺服器
-
-```bash
-# 使用 Python 3
-python -m http.server 8000
-
-# 使用 Node.js (需安裝 http-server)
-npx http-server -p 8000
-
-# 瀏覽器訪問
-http://localhost:8000
-```
-
 ## 📖 課程內容概覽
 
 ### Part 0：課程導覽 🎯
