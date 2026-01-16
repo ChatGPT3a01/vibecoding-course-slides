@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 10: 課程總結與展望 - VibeCoding 氣圍編碼</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-buttons { display: flex; gap: 12px; }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            color: white;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            padding-top: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            top: 60px; left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            z-index: 20;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        h1 { color: #667eea; font-size: 52px; margin-bottom: 20px; text-align: center; font-weight: 800; }
+        h2 { color: #764ba2; font-size: 36px; margin-bottom: 25px; border-bottom: 3px solid #667eea; padding-bottom: 12px; font-weight: 700; }
+        h3 { color: #667eea; font-size: 24px; margin: 20px 0 12px 0; font-weight: 600; }
+        h4 { color: #555; font-size: 20px; margin: 15px 0 10px 0; font-weight: 600; }
+        p, li { font-size: 18px; line-height: 1.7; color: #444; margin-bottom: 12px; }
+
+        code {
+            background: #f0f2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #004d40;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .concept-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .concept-card h3, .concept-card h4 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .concept-card p {
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 0;
+            font-size: 16px;
+        }
+
+        ul, ol { margin-left: 25px; margin-bottom: 18px; }
+        li { margin-bottom: 10px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover { background: rgba(102, 126, 234, 0.05); }
+
+        .indicators {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 4000;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active { background: #84fab0; transform: scale(1.3); }
+        .dot:hover { background: rgba(255,255,255,0.7); transform: scale(1.2); }
+
+        .cover-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cover-subtitle {
+            color: #666;
+            font-size: 26px;
+            font-weight: normal;
+            max-width: 800px;
+            margin-top: 10px;
+            border: none;
+        }
+
+        .cover-tags {
+            margin-top: 35px;
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .part-cover {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        .part-number {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .part-title {
+            font-size: 48px;
+            color: #667eea;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .part-description {
+            font-size: 22px;
+            color: #666;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .next-part-btn {
+            display: inline-block;
+            margin-top: 35px;
+            padding: 16px 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 19px;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .next-part-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        .step-indicator {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .gain-item {
+            background: rgba(132, 250, 176, 0.1);
+            border-left: 4px solid #84fab0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+
+        .tool-comparison {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tool-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .tool-item h5 {
+            color: #667eea;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+
+        .tool-item p {
+            font-size: 15px;
+            margin: 0;
+        }
+
+        .role-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .role-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .role-card h4 {
+            color: white;
+            margin-top: 0;
+            font-size: 22px;
+        }
+
+        .role-card p {
+            color: rgba(255, 255, 255, 0.95);
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .contact-section h4 {
+            color: #667eea;
+            margin-top: 0;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .social-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            color: #667eea;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .footer-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .footer-section p {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .copyright {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 15px;
+        }
+
+        .home-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 35px;
+            background: white;
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .learning-resource {
+            background: white;
+            border: 2px solid #667eea;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .learning-resource h5 {
+            color: #667eea;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+
+        .learning-resource p {
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .learning-resource a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .learning-resource a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 30px 20px; }
+            h1 { font-size: 32px; }
+            h2 { font-size: 26px; }
+            .concept-grid { grid-template-columns: 1fr; }
+            .two-column { grid-template-columns: 1fr; }
+            .tool-comparison { grid-template-columns: 1fr; }
+        }
+
+        .content-card::-webkit-scrollbar { width: 8px; }
+        .content-card::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .content-card::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 10: 課程總結與展望 | 頁碼: <span id="currentPage">1</span> / 6</div>
+        <div class="nav-buttons">
+            <a href="Part9_AI代理人與自動化.html" class="nav-btn">← Part 9</a>
+            <a href="Part11_部署教學.html" class="nav-btn">Part 11 →</a>
+            <button class="nav-btn" onclick="toggleFullscreen()">全螢幕</button>
+        </div>
+    </div>
+
+    <div class="slide-container">
+        <!-- Slide 1: Part 7 封面 -->
+        <div class="slide active">
+            <div class="content-card part-cover">
+                <div class="part-number">Part 10</div>
+                <div class="part-title">課程總結與展望</div>
+                <p class="part-description">
+                    回顧核心收穫、工具選擇指南、<br>
+                    AI 時代開發者的新角色定位
+                </p>
+                <div style="margin-top: 40px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                    <span class="highlight">核心收穫</span>
+                    <span class="highlight">工具對比</span>
+                    <span class="highlight">新角色定位</span>
+                    <span class="highlight">持續學習</span>
+                    <span class="highlight">行動號召</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 課程核心收穫回顧 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🎓 課程核心收穫回顧</h2>
+                <p style="text-align: center; color: #666; margin-bottom: 25px;">
+                    這 6 小時的課程，您收穫的不只是工具，更是全新的開發思維
+                </p>
+
+                <h3>1. 思維轉變 - 從「Code-First」到「Vibe-First」</h3>
+                <div class="gain-item">
+                    <strong>核心概念</strong>: 用自然語言與 AI 溝通，而不是寫代碼<br>
+                    <strong>實踐意義</strong>: 時間縮短 80%，創意迸發 300%<br>
+                    <strong>應用場景</strong>: 從原型開發到生產級應用
+                </div>
+
+                <h3>2. 工具掌握 - 10+ 種前沿 AI 開發工具</h3>
+                <div class="gain-item">
+                    <strong>IDE 類</strong>: Cursor、GitHub Copilot、Windsurf、Antigravity<br>
+                    <strong>前端生成</strong>: Gemini Canvas、v0.dev、AI Studio<br>
+                    <strong>全端開發</strong>: Lovable AI<br>
+                    <strong>自動化</strong>: Google Apps Script、NotebookLM
+                </div>
+
+                <h3>3. 實戰能力 - 完成 15+ 個真實項目</h3>
+                <div class="gain-item">
+                    <strong>從零到一</strong>: 每個項目都是完整的開發流程<br>
+                    <strong>多領域實踐</strong>: 前端、後端、資料庫、自動化、AI 代理<br>
+                    <strong>品質保障</strong>: 測試、部署、優化的全周期
+                </div>
+
+                <h3>4. 自動化流程 - 建立屬於自己的工作流</h3>
+                <div class="gain-item">
+                    <strong>效率提升</strong>: 重複工作自動化，聚焦創意<br>
+                    <strong>可持續發展</strong>: 建立個人知識庫與工具集<br>
+                    <strong>無限擴展</strong>: 從簡單腳本到複雜 AI 代理
+                </div>
+
+                <div class="box success" style="margin-top: 25px;">
+                    <strong>✅ 您現在已經可以</strong><br>
+                    • 用 3 分鐘生成一個完整網站<br>
+                    • 用 10 分鐘開發一個全端應用<br>
+                    • 用 30 分鐘打造一個複雜系統<br>
+                    • 用 AI 代理自動化日常工作
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 工具選擇指南 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🧰 工具選擇指南 - 10+ 種工具對比表</h2>
+                <p style="margin-bottom: 20px;">根據使用場景選擇合適的工具組合</p>
+
+                <h3>🤖 IDE 類工具對比</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>工具</th>
+                            <th>主要功能</th>
+                            <th>最佳場景</th>
+                            <th>學習曲線</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Cursor IDE</strong></td>
+                            <td>AI 協作編輯、代碼生成、實時糾正</td>
+                            <td>全棧開發、快速迭代</td>
+                            <td>低</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GitHub Copilot</strong></td>
+                            <td>代碼建議、文件完成、單元測試生成</td>
+                            <td>現有項目增強、團隊開發</td>
+                            <td>低</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Windsurf</strong></td>
+                            <td>智能代碼理解、架構分析、多文件編輯</td>
+                            <td>大型項目、代碼重構</td>
+                            <td>中</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Antigravity</strong></td>
+                            <td>Google 雲端 IDE、自動測試、一鍵部署</td>
+                            <td>Google 生態、快速發布</td>
+                            <td>中</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>🎨 前端生成工具對比</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>工具</th>
+                            <th>輸入方式</th>
+                            <th>輸出質量</th>
+                            <th>最佳用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Gemini Canvas</strong></td>
+                            <td>對話式、描述需求</td>
+                            <td>高度定制化</td>
+                            <td>動態交互應用、實時調整</td>
+                        </tr>
+                        <tr>
+                            <td><strong>v0.dev</strong></td>
+                            <td>圖片轉代碼、文字描述</td>
+                            <td>專業級 React 代碼</td>
+                            <td>設計稿快速開發、組件庫</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AI Studio</strong></td>
+                            <td>影像識別、數據驅動</td>
+                            <td>智能交互</td>
+                            <td>AI 應用開發、影像識別</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>💼 其他核心工具</h3>
+                <div class="tool-comparison">
+                    <div class="tool-item">
+                        <h5>Lovable AI</h5>
+                        <p><strong>用途</strong>: 全端應用秒速生成<br><strong>特點</strong>: 含前端、後端、資料庫<br><strong>速度</strong>: 10 分鐘完整應用</p>
+                    </div>
+                    <div class="tool-item">
+                        <h5>Google Apps Script</h5>
+                        <p><strong>用途</strong>: Google 生態自動化<br><strong>特點</strong>: 無需部署、即用型<br><strong>效果</strong>: 工作流自動化 90%</p>
+                    </div>
+                    <div class="tool-item">
+                        <h5>NotebookLM</h5>
+                        <p><strong>用途</strong>: 文件知識庫、智能問答<br><strong>特點</strong>: 長文本理解<br><strong>應用</strong>: 文件管理、知識提取</p>
+                    </div>
+                    <div class="tool-item">
+                        <h5>Gemini & Gems</h5>
+                        <p><strong>用途</strong>: AI 模型與自定義助手<br><strong>特點</strong>: 強大的提示工程<br><strong>優勢</strong>: 專業級定制化</p>
+                    </div>
+                </div>
+
+                <h3>🎯 組合搭配策略</h3>
+                <div class="box info">
+                    <strong>快速原型</strong>: Gemini Canvas → v0.dev → 本地 Cursor<br>
+                    <strong>全端開發</strong>: Lovable AI → GitHub Copilot → 部署<br>
+                    <strong>企業應用</strong>: Windsurf → Antigravity → Google Apps Script 自動化<br>
+                    <strong>知識管理</strong>: NotebookLM + Gems 構建個人 AI 助手
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: AI 時代開發者的新角色 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🚀 AI 時代開發者的新角色</h2>
+                <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                    從代碼工人到架構設計師，您的角色在轉變
+                </p>
+
+                <div class="role-card">
+                    <h4>1️⃣ 問題定義者</h4>
+                    <p>不再是「怎樣用代碼實現」，而是「如何定義問題」。<br>
+                    您的核心能力：清晰表達需求、設計系統架構、考慮用戶體驗。</p>
+                </div>
+
+                <div class="role-card">
+                    <h4>2️⃣ 架構設計者</h4>
+                    <p>用自然語言描述系統，AI 負責實現細節。<br>
+                    您的核心能力：系統思維、技術選型、最佳實踐應用。</p>
+                </div>
+
+                <div class="role-card">
+                    <h4>3️⃣ 品質把關者</h4>
+                    <p>AI 生成的代碼需要測試、審核、優化。<br>
+                    您的核心能力：代碼審查、性能優化、安全檢查、使用者體驗驗證。</p>
+                </div>
+
+                <div class="role-card">
+                    <h4>4️⃣ 創意實踐者</h4>
+                    <p>專注於創意和創新，將想法快速轉化為現實。<br>
+                    您的核心能力：創意思維、快速實驗、用戶反饋迴圈。</p>
+                </div>
+
+                <h3>新時代開發者的技能金字塔</h3>
+                <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 25px; border-radius: 12px; margin-top: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                            <strong style="font-size: 20px;">創意思維 + 問題定義</strong>
+                        </div>
+                        <div style="background: rgba(102, 126, 234, 0.2); color: #667eea; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600;">
+                            系統架構 + 技術選型
+                        </div>
+                        <div style="background: rgba(102, 126, 234, 0.15); color: #667eea; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600;">
+                            提示工程 + 工具運用
+                        </div>
+                        <div style="background: rgba(102, 126, 234, 0.1); color: #667eea; padding: 15px; border-radius: 8px; font-weight: 600;">
+                            基礎技術知識（不必精深）
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box warning" style="margin-top: 25px;">
+                    <strong>⚠️ 重要提醒</strong><br>
+                    基礎技術知識仍然重要，但優先級改變了。<br>
+                    現在重點是「理解」而非「精通」。<br>
+                    您需要知道為什麼 AI 的建議是對的，而不需要知道每一個語法細節。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 持續學習資源 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>📚 持續學習資源</h2>
+                <p>課程結束後的學習之旅才剛開始</p>
+
+                <h3>相關實戰班課程</h3>
+                <div class="learning-resource">
+                    <h5>VibeCoding 進階班</h5>
+                    <p>深入 AI 代理人、多模型整合、企業級應用開發</p>
+                </div>
+                <div class="learning-resource">
+                    <h5>Cursor 專業開發班</h5>
+                    <p>Cursor IDE 進階技巧、大型項目管理、團隊協作</p>
+                </div>
+                <div class="learning-resource">
+                    <h5>AI 提示工程工作坊</h5>
+                    <p>從基礎到高級提示詞設計、Gems 開發、自定義 AI 助手</p>
+                </div>
+                <div class="learning-resource">
+                    <h5>全棧 AI 應用開發</h5>
+                    <p>Lovable AI 進階、複雜系統架構、雲端部署實戰</p>
+                </div>
+
+                <h3>社群連結</h3>
+                <div class="contact-section">
+                    <h4>官方社群</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link">📘 Facebook 社團</a>
+                        <a href="#" class="social-link">📺 YouTube 頻道</a>
+                        <a href="#" class="social-link">🚀 3A 社團</a>
+                        <a href="#" class="social-link">💬 Discord 群組</a>
+                        <a href="#" class="social-link">📧 官方通訊</a>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 16px;">
+                        在社群中分享您的項目、提出問題、學習他人經驗，一起成長！
+                    </p>
+                </div>
+
+                <h3>官方文檔與資源</h3>
+                <div class="learning-resource">
+                    <h5>工具官方文檔</h5>
+                    <p>
+                        • <a href="#">Cursor 文檔</a> |
+                        • <a href="#">GitHub Copilot 指南</a> |
+                        • <a href="#">Gemini API 文檔</a> |
+                        • <a href="#">Lovable AI 教程</a>
+                    </p>
+                </div>
+                <div class="learning-resource">
+                    <h5>最新趨勢與研究</h5>
+                    <p>
+                        • <a href="#">AI 開發工具月報</a> |
+                        • <a href="#">技術博客</a> |
+                        • <a href="#">案例研究</a> |
+                        • <a href="#">最佳實踐指南</a>
+                    </p>
+                </div>
+
+                <h3>個人發展路線圖</h3>
+                <div class="box info" style="margin-top: 20px;">
+                    <strong>🎯 未來 3 個月</strong><br>
+                    1. 完成 3-5 個個人項目，建立作品集<br>
+                    2. 參與社群分享，獲得反饋<br>
+                    3. 掌握一個領域深化（如 AI 代理、資料視覺化等）<br><br>
+
+                    <strong>未來 6 個月</strong><br>
+                    1. 開發 1-2 個商用級應用<br>
+                    2. 參加進階班或工作坊<br>
+                    3. 建立個人品牌與影響力<br><br>
+
+                    <strong>未來 1 年</strong><br>
+                    1. 成為領域專家<br>
+                    2. 指導新手、分享經驗<br>
+                    3. 探索新的商業機會
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: 結業 + 行動號召 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🎉 結業證書 & 行動號召</h2>
+
+                <div class="footer-section" style="margin-bottom: 30px;">
+                    <h3 style="color: white; border: none; margin-top: 0;">恭喜！您已完成 VibeCoding 課程</h3>
+                    <p>您已掌握 10+ 種 AI 開發工具、完成 15+ 個實作案例、<br>
+                    建立全新的「Vibe-First」開發思維</p>
+                </div>
+
+                <h3>📋 課程資訊總結</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>內容</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>課程名稱</strong></td>
+                            <td>VibeCoding 氣圍編碼 - AI 智慧設計與高效創意實戰班</td>
+                        </tr>
+                        <tr>
+                            <td><strong>課程時數</strong></td>
+                            <td>6 小時完整課程</td>
+                        </tr>
+                        <tr>
+                            <td><strong>投影片頁數</strong></td>
+                            <td>80+ 頁精美投影片</td>
+                        </tr>
+                        <tr>
+                            <td><strong>工具涵蓋</strong></td>
+                            <td>10+ 種前沿 AI 開發工具</td>
+                        </tr>
+                        <tr>
+                            <td><strong>實作案例</strong></td>
+                            <td>15+ 個完整項目示例</td>
+                        </tr>
+                        <tr>
+                            <td><strong>適合人群</strong></td>
+                            <td>零程式背景 / 初級開發者 / AI 愛好者 / 創意工作者</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>📞 聯絡方式</h3>
+                <div class="contact-section">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h5 style="color: #667eea; margin-top: 0;">📧 郵件</h5>
+                            <p>contact@vibecoding.com</p>
+                        </div>
+                        <div>
+                            <h5 style="color: #667eea; margin-top: 0;">💬 即時通訊</h5>
+                            <p>官方 Discord 社群</p>
+                        </div>
+                        <div>
+                            <h5 style="color: #667eea; margin-top: 0;">🌐 官網</h5>
+                            <p>vibecoding.com</p>
+                        </div>
+                        <div>
+                            <h5 style="color: #667eea; margin-top: 0;">📱 社交媒體</h5>
+                            <p>@vibecoding (所有平台)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🎯 立即行動！</h3>
+                <div class="box success">
+                    <strong>✅ 您現在就可以開始：</strong><br><br>
+                    1. <strong>選擇一個想法</strong> - 任何您想要解決的問題<br>
+                    2. <strong>打開 Cursor / Gemini Canvas</strong> - 用自然語言描述<br>
+                    3. <strong>30 分鐘內生成原型</strong> - 看著您的想法變成現實<br>
+                    4. <strong>分享到社群</strong> - 獲得反饋和靈感<br>
+                    5. <strong>不斷迭代改進</strong> - 這就是 VibeCoding 的魔力<br>
+                </div>
+
+                <div style="background: linear-gradient(135deg, rgba(132, 250, 176, 0.2) 0%, rgba(143, 211, 244, 0.2) 100%); padding: 25px; border-radius: 12px; margin-top: 25px; text-align: center; border: 2px solid #84fab0;">
+                    <p style="font-size: 20px; color: #004d40; font-weight: 700; margin: 0;">
+                        🚀 AI 時代已經到來，從「說」開始編碼，無限創意等待著您！
+                    </p>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="index.html" class="home-btn">🏠 返回首頁</a>
+                </div>
+
+                <div class="copyright" style="text-align: center; margin-top: 25px; color: #888; font-size: 14px;">
+                    <p>版權所有 (c) 2024 VibeCoding 氣圍編碼<br>
+                    保留所有權利 | 感謝您的學習與支持</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function init() {
+            createIndicators();
+            showSlide(0);
+            updateButtons();
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        }
+
+        function createIndicators() {
+            const container = document.getElementById('indicatorContainer');
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => goToSlide(index);
+                container.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            currentSlide = index;
+            document.querySelectorAll('.dot').forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === index);
+            });
+            updateButtons();
+            document.getElementById('currentPage').textContent = currentSlide + 1;
+            const activeCard = slides[index].querySelector('.content-card');
+            if (activeCard) activeCard.scrollTop = 0;
+        }
+
+        function changeSlide(direction) { showSlide(currentSlide + direction); }
+        function goToSlide(index) { showSlide(index); }
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

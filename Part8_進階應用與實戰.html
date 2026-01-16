@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 8: 進階應用與實戰 - VibeCoding 氣圍編碼</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-buttons { display: flex; gap: 12px; }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            color: white;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            padding-top: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            top: 60px; left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            z-index: 20;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        h1 { color: #667eea; font-size: 52px; margin-bottom: 20px; text-align: center; font-weight: 800; }
+        h2 { color: #764ba2; font-size: 36px; margin-bottom: 25px; border-bottom: 3px solid #667eea; padding-bottom: 12px; font-weight: 700; }
+        h3 { color: #667eea; font-size: 24px; margin: 20px 0 12px 0; font-weight: 600; }
+        h4 { color: #555; font-size: 20px; margin: 15px 0 10px 0; font-weight: 600; }
+        p, li { font-size: 18px; line-height: 1.7; color: #444; margin-bottom: 12px; }
+
+        code {
+            background: #f0f2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #004d40;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .concept-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .concept-card h3, .concept-card h4 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .concept-card p {
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 0;
+            font-size: 16px;
+        }
+
+        ul, ol { margin-left: 25px; margin-bottom: 18px; }
+        li { margin-bottom: 10px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover { background: rgba(102, 126, 234, 0.05); }
+
+        .indicators {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 4000;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active { background: #84fab0; transform: scale(1.3); }
+        .dot:hover { background: rgba(255,255,255,0.7); transform: scale(1.2); }
+
+        .part-cover {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        .part-number {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .part-title {
+            font-size: 48px;
+            color: #667eea;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .part-description {
+            font-size: 22px;
+            color: #666;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .next-part-btn {
+            display: inline-block;
+            margin-top: 35px;
+            padding: 16px 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 19px;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .next-part-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        .step-indicator {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .feature-item {
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.05);
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+        }
+
+        .prompt-box {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+            overflow-x: auto;
+        }
+
+        .three-column {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 1024px) {
+            .three-column { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 30px 20px; }
+            h1 { font-size: 32px; }
+            h2 { font-size: 26px; }
+            .concept-grid { grid-template-columns: 1fr; }
+            .two-column { grid-template-columns: 1fr; }
+        }
+
+        .content-card::-webkit-scrollbar { width: 8px; }
+        .content-card::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .content-card::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 8: 進階應用與實戰 | 頁碼: <span id="currentPage">1</span> / 16</div>
+        <div class="nav-buttons">
+            <a href="Part7_全端應用生成.html" class="nav-btn">← Part 7</a>
+            <a href="Part9_AI代理人與自動化.html" class="nav-btn">Part 9 →</a>
+            <button class="nav-btn" onclick="toggleFullscreen()">全螢幕</button>
+        </div>
+    </div>
+
+    <div class="slide-container">
+        <!-- Slide 1: Part 6 封面 -->
+        <div class="slide active">
+            <div class="content-card part-cover">
+                <div class="part-number">Part 8</div>
+                <div class="part-title">進階應用與實戰</div>
+                <p class="part-description">
+                    掌握前沿技術，實現沉浸式體驗<br>
+                    360°圖片、影片生成、3D地球、手勢控制、UI/UX 設計
+                </p>
+                <div style="margin-top: 40px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                    <span class="highlight">360°圖片</span>
+                    <span class="highlight">影片生成</span>
+                    <span class="highlight">3D 地球</span>
+                    <span class="highlight">手勢控制</span>
+                    <span class="highlight">UI/UX 設計</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 進階應用概述 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🚀 進階應用概述</h2>
+
+                <div class="box info">
+                    <strong>💡 課程核心</strong><br>
+                    從基礎開發進入沉浸式體驗時代。學習如何使用 WebGL、AI 影片生成、手勢識別等前沿技術，打造令人驚艷的互動應用。
+                </div>
+
+                <h3>學習目標</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <strong>🌐 360°全景應用</strong><br>
+                        生成和展示沉浸式 360 度場景
+                    </div>
+                    <div class="feature-item">
+                        <strong>🎬 AI 影片生成</strong><br>
+                        使用 Gemini、Grok 生成高質量影片
+                    </div>
+                    <div class="feature-item">
+                        <strong>🌍 3D 互動應用</strong><br>
+                        WebGL + Three.js 即時天氣儀表板
+                    </div>
+                    <div class="feature-item">
+                        <strong>✋ 手勢控制遊戲</strong><br>
+                        Webcam + MediaPipe 沉浸式互動
+                    </div>
+                    <div class="feature-item">
+                        <strong>🎨 UI/UX 實戰</strong><br>
+                        可用性設計與響應式佈局
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">核心技術棧</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>應用類別</th>
+                            <th>核心技術</th>
+                            <th>AI 工具</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>360°圖片</strong></td>
+                            <td>Three.js + Panorama</td>
+                            <td>Gemini Image Generation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>影片生成</strong></td>
+                            <td>MP4 + WebM</td>
+                            <td>Gemini 2.0、Grok API</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3D 地球</strong></td>
+                            <td>WebGL + Three.js</td>
+                            <td>Open-Meteo 天氣 API</td>
+                        </tr>
+                        <tr>
+                            <td><strong>手勢控制</strong></td>
+                            <td>Webcam + ML Kit</td>
+                            <td>MediaPipe + Canvas</td>
+                        </tr>
+                        <tr>
+                            <td><strong>UI/UX</strong></td>
+                            <td>Tailwind CSS + RWD</td>
+                            <td>Figma + AI Design</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 3: 360°圖片原理與應用 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🌐 360°圖片原理與應用</h2>
+
+                <h3>什麼是 360°全景圖？</h3>
+                <div class="box info">
+                    <strong>定義</strong><br>
+                    360 度全景圖是一種球面投影圖像，讓用戶能夠 360 度全方位觀看場景。使用者可以通過滑鼠、觸控或陀螺儀來改變視角。
+                </div>
+
+                <h3>技術原理</h3>
+                <div class="three-column">
+                    <div class="concept-card">
+                        <h4>1️⃣ 圖像獲取</h4>
+                        <p>使用多鏡頭或全景相機拍攝，或通過 AI 生成全景圖像</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>2️⃣ 球體映射</h4>
+                        <p>將 2D 圖像映射到 3D 球體上，使用 Three.js 渲染</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>3️⃣ 互動控制</h4>
+                        <p>監聽滑鼠/觸控事件，實時更新相機視角</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">應用場景</h3>
+                <ul>
+                    <li><strong>房產展示</strong> - 虛擬看房</li>
+                    <li><strong>旅遊導覽</strong> - 景點全景瀏覽</li>
+                    <li><strong>教育展示</strong> - 博物館虛擬展覽</li>
+                    <li><strong>產品展示</strong> - 沉浸式產品預覽</li>
+                    <li><strong>地理應用</strong> - Google Street View 式導覽</li>
+                </ul>
+
+                <h3>核心 Three.js 概念</h3>
+                <div class="box success">
+                    <code>SphereGeometry(radius, widthSegments, heightSegments)</code><br>
+                    創建球體幾何体，innerRadius 可用於半透明效果<br>
+                    <code>ShaderMaterial</code> 用於複雜光影效果
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 實作 - 火山口 360°場景 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🌋 實作：火山口 360°場景</h2>
+
+                <h3>Gemini Prompt 產生全景圖</h3>
+                <div class="prompt-box">
+Generate a 360-degree panoramic image of a volcanic crater landscape. The image should be:
+- A seamless equirectangular projection (2048x1024 pixels)
+- Dramatic volcanic terrain with red and orange lava flows
+- Misty volcanic gases and clouds
+- Realistic geological formations
+- High quality, photorealistic style
+- Suitable for panoramic viewing and immersive experience
+                </div>
+
+                <h3>Three.js 實作步驟</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <strong>步驟 1: 基礎設置</strong><br>
+                        創建 Scene、Camera、Renderer 和 SphereGeometry
+                    </div>
+                    <div class="feature-item">
+                        <strong>步驟 2: 紋理加載</strong><br>
+                        使用 TextureLoader 加載全景圖，應用到球體上
+                    </div>
+                    <div class="feature-item">
+                        <strong>步驟 3: 相機控制</strong><br>
+                        實現鼠標/觸控拖動改變視角，使用 OrbitControls
+                    </div>
+                    <div class="feature-item">
+                        <strong>步驟 4: 動畫迴圈</strong><br>
+                        requestAnimationFrame 持續渲染更新
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">核心程式碼框架</h3>
+                <div class="prompt-box" style="font-size: 13px;">
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+const geometry = new THREE.SphereGeometry(500, 64, 64);
+const texture = new THREE.TextureLoader().load('panorama.jpg');
+const material = new THREE.MeshBasicMaterial({ map: texture });
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+// OrbitControls 用於交互
+const controls = new OrbitControls(camera, renderer.domElement);
+                </div>
+
+                <div class="box warning">
+                    <strong>💡 提示</strong><br>
+                    • 全景圖應為 2:1 寬高比（如 2048x1024）<br>
+                    • 使用 CORS 友善的圖片源<br>
+                    • 可加入熱點標記（POI）增加交互
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Gemini 與 Grok 影片生成 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🎬 Gemini 與 Grok 影片生成</h2>
+
+                <h3>AI 影片生成工具對比</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>工具</th>
+                            <th>能力</th>
+                            <th>優勢</th>
+                            <th>限制</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Gemini 2.0</strong></td>
+                            <td>文字/圖片轉影片</td>
+                            <td>整合度高、API 完善</td>
+                            <td>生成速度較慢</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Grok Video</strong></td>
+                            <td>實時影片合成</td>
+                            <td>速度快、品質好</td>
+                            <td>API 仍在測試</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RunwayML</strong></td>
+                            <td>高階視覺效果</td>
+                            <td>業界標準</td>
+                            <td>成本較高</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 25px;">Gemini 影片生成 Prompt</h3>
+                <div class="prompt-box">
+Create a 10-second video showing:
+- Scene 1 (0-3s): A volcano erupting with lava flowing down
+- Scene 2 (3-6s): Smoke and ash clouds rising into the sky
+- Scene 3 (6-10s): Lava glowing red-orange in the dark
+- High quality, cinematic lighting
+- 1080p resolution, 30fps
+- Smooth camera movement
+- Add dramatic background music effect
+                </div>
+
+                <h3>使用 Gemini API 生成影片</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <strong>步驟 1: 準備提示</strong><br>
+                        詳細描述影片內容、場景、效果
+                    </div>
+                    <div class="feature-item">
+                        <strong>步驟 2: 調用 API</strong><br>
+                        <code>genai.models.GenerativeModel('gemini-2.0-flash').generate_content()</code>
+                    </div>
+                    <div class="feature-item">
+                        <strong>步驟 3: 處理結果</strong><br>
+                        獲取影片 URL 或二進制數據，保存或播放
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: 實作 - 多場景影片串接 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🎞️ 實作：多場景影片串接</h2>
+
+                <h3>影片序列流程圖</h3>
+                <div class="box success">
+                    <strong>📹 三場景火山故事</strong><br>
+                    場景1 (0-3s): 日出時的平靜火山<br>
+                    ↓ 轉場效果<br>
+                    場景2 (3-6s): 火山開始活躍<br>
+                    ↓ 轉場效果<br>
+                    場景3 (6-9s): 火山爆發
+                </div>
+
+                <h3>分別生成每場景的 Prompt</h3>
+                <div class="prompt-box" style="font-size: 13px;">
+【場景1】 Create a 3-second cinematic video of a volcano at sunrise...
+【場景2】 Create a 3-second video showing volcanic tremors and steam...
+【場景3】 Create a 3-second video of a violent volcanic eruption...
+                </div>
+
+                <h3>串接實作步驟</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>使用 FFmpeg</h4>
+                        <ul>
+                            <li>下載各場景影片</li>
+                            <li>使用 FFmpeg 串接</li>
+                            <li>添加轉場效果</li>
+                            <li>輸出最終影片</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>使用 FFmpeg.js</h4>
+                        <ul>
+                            <li>在瀏覽器中運行</li>
+                            <li>實時串接視頻</li>
+                            <li>支持 WebWorker</li>
+                            <li>輸出 Blob URL</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px;">核心程式碼</h3>
+                <div class="prompt-box" style="font-size: 12px;">
+// 獲取多個影片
+const videos = await Promise.all([
+  generateVideo(scene1_prompt),
+  generateVideo(scene2_prompt),
+  generateVideo(scene3_prompt)
+]);
+
+// 使用 FFmpeg.js 串接
+const command = [
+  '-i', video1, '-i', video2, '-i', video3,
+  '-filter_complex', '[0:v][1:v][2:v]concat=n=3:v=1[out]',
+  '-map', '[out]', 'output.mp4'
+];
+                </div>
+
+                <div class="box info">
+                    <strong>🎯 進階技巧</strong><br>
+                    • 使用 crossfade 轉場 filter<br>
+                    • 調整音頻同步<br>
+                    • 添加字幕或圖形疊加
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: WebGL + Three.js 3D 渲染 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🌐 WebGL + Three.js 3D 渲染</h2>
+
+                <div class="box info">
+                    <strong>什麼是 WebGL？</strong><br>
+                    WebGL 是瀏覽器原生 3D 圖形 API，基於 OpenGL，允許直接訪問 GPU 進行高性能圖形渲染。Three.js 是對 WebGL 的高級封裝。
+                </div>
+
+                <h3>3D 地球儀架構</h3>
+                <div class="three-column">
+                    <div class="concept-card">
+                        <h4>🌍 地球模型</h4>
+                        <p>
+                            使用 SphereGeometry 創建<br>
+                            紋理貼圖（地球表面）<br>
+                            大氣層效果（光暈）
+                        </p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>💨 天氣視覺化</h4>
+                        <p>
+                            雲層動畫<br>
+                            溫度熱力圖<br>
+                            風向箭頭疊加
+                        </p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>✨ 互動控制</h4>
+                        <p>
+                            旋轉/縮放<br>
+                            點擊查詢<br>
+                            實時更新
+                        </p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">Three.js 核心元素</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>元素</th>
+                            <th>作用</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Geometry</strong></td>
+                            <td>定義形狀</td>
+                            <td>SphereGeometry(radius)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Material</strong></td>
+                            <td>定義外觀</td>
+                            <td>MeshPhongMaterial({ map })</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mesh</strong></td>
+                            <td>結合體</td>
+                            <td>new Mesh(geometry, material)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Light</strong></td>
+                            <td>光源</td>
+                            <td>DirectionalLight、PointLight</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Camera</strong></td>
+                            <td>視角</td>
+                            <td>PerspectiveCamera(75, w/h)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 20px;">基礎設置範例</h3>
+                <div class="prompt-box" style="font-size: 13px;">
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(w, h);
+renderer.setClearColor(0x000000);
+document.body.appendChild(renderer.domElement);
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: 即時天氣數據整合（Open-Meteo API） -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🌤️ 即時天氣數據整合（Open-Meteo API）</h2>
+
+                <h3>Open-Meteo API 簡介</h3>
+                <div class="box success">
+                    <strong>✅ 優勢</strong><br>
+                    • 免費，無需認證金鑰<br>
+                    • 覆蓋全球，精準度高<br>
+                    • 支援歷史數據和預報<br>
+                    • 限制寬鬆（無需付費）
+                </div>
+
+                <h3>API 端點與參數</h3>
+                <div class="prompt-box" style="font-size: 13px;">
+GET https://api.open-meteo.com/v1/forecast
+?latitude=35.68
+&longitude=139.69
+&hourly=temperature_2m,relative_humidity_2m,weather_code
+&daily=weather_code,temperature_2m_max,temperature_2m_min
+                </div>
+
+                <h3>整合步驟</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="step-indicator">1</span>
+                        <strong>地理位置</strong><br>
+                        使用 Geolocation API 或 IP 查詢獲取用戶位置
+                    </div>
+                    <div class="feature-item">
+                        <span class="step-indicator">2</span>
+                        <strong>API 請求</strong><br>
+                        根據經緯度查詢即時天氣數據
+                    </div>
+                    <div class="feature-item">
+                        <span class="step-indicator">3</span>
+                        <strong>數據解析</strong><br>
+                        提取溫度、濕度、天氣代碼等信息
+                    </div>
+                    <div class="feature-item">
+                        <span class="step-indicator">4</span>
+                        <strong>視覺呈現</strong><br>
+                        渲染到 3D 地球上（顏色、動畫等）
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px;">天氣代碼映射示例</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>代碼</th>
+                            <th>天氣</th>
+                            <th>視覺效果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>0</strong></td>
+                            <td>晴天</td>
+                            <td>清澈藍色</td>
+                        </tr>
+                        <tr>
+                            <td><strong>1-3</strong></td>
+                            <td>陰天</td>
+                            <td>灰白色</td>
+                        </tr>
+                        <tr>
+                            <td><strong>45-48</strong></td>
+                            <td>霧</td>
+                            <td>模糊效果</td>
+                        </tr>
+                        <tr>
+                            <td><strong>51-55</strong></td>
+                            <td>小雨</td>
+                            <td>降雨粒子</td>
+                        </tr>
+                        <tr>
+                            <td><strong>80-82</strong></td>
+                            <td>暴風雨</td>
+                            <td>深紅色 + 閃電</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 20px;">Fetch 實作</h3>
+                <div class="prompt-box" style="font-size: 12px;">
+const response = await fetch(
+  `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m`
+);
+const data = await response.json();
+const temp = data.hourly.temperature_2m[0];
+updateGlobeColor(temp); // 根據溫度更新地球顏色
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 手勢控制遊戲 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>✋ 手勢控制遊戲</h2>
+
+                <div class="box info">
+                    <strong>🎮 遊戲概念</strong><br>
+                    利用 Webcam 和 MediaPipe 識別手部位置和手勢，控制遊戲元素（如消泡泡）。玩家通過在空中做出手勢來與虛擬物體互動。
+                </div>
+
+                <h3>技術棧</h3>
+                <div class="three-column">
+                    <div class="concept-card">
+                        <h4>🎥 Webcam</h4>
+                        <p>
+                            getUserMedia API<br>
+                            實時視頻流<br>
+                            Canvas 繪製
+                        </p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🤲 MediaPipe</h4>
+                        <p>
+                            手勢偵測<br>
+                            手指關節點<br>
+                            即時推理
+                        </p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🎯 遊戲邏輯</h4>
+                        <p>
+                            碰撞檢測<br>
+                            計分系統<br>
+                            動畫效果
+                        </p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">消泡泡遊戲流程</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <strong>1️⃣ 初始化</strong><br>
+                        加載 Webcam、初始化 MediaPipe Hands
+                    </div>
+                    <div class="feature-item">
+                        <strong>2️⃣ 偵測循環</strong><br>
+                        持續檢測手部位置和指尖坐標
+                    </div>
+                    <div class="feature-item">
+                        <strong>3️⃣ 泡泡生成</strong><br>
+                        隨機生成泡泡，Canvas 中繪製圓形
+                    </div>
+                    <div class="feature-item">
+                        <strong>4️⃣ 碰撞檢測</strong><br>
+                        檢測指尖是否觸碰泡泡（距離計算）
+                    </div>
+                    <div class="feature-item">
+                        <strong>5️⃣ 反饋機制</strong><br>
+                        泡泡消失、音效、加分、難度提升
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">核心 Prompt</h3>
+                <div class="prompt-box">
+Create an interactive hand gesture bubble popping game using:
+- MediaPipe Hands for gesture recognition
+- Canvas for rendering
+- Real-time collision detection
+- Sound effects for feedback
+- Progressive difficulty
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: UI/UX 設計原則 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🎨 UI/UX 設計原則</h2>
+
+                <div class="box info">
+                    <strong>💡 定義</strong><br>
+                    <strong>UI (User Interface)</strong>: 界面設計，視覺元素的排列<br>
+                    <strong>UX (User Experience)</strong>: 用戶體驗，整體交互感受
+                </div>
+
+                <h3>四大設計原則</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>1️⃣ 可用性（Usability）</h4>
+                        <div class="feature-item">
+                            • 易於理解和學習<br>
+                            • 功能清晰可達<br>
+                            • 減少用戶錯誤
+                        </div>
+                    </div>
+                    <div>
+                        <h4>2️⃣ 可見性（Visibility）</h4>
+                        <div class="feature-item">
+                            • 信息層級明確<br>
+                            • 高對比度<br>
+                            • 清晰的視覺反饋
+                        </div>
+                    </div>
+                    <div>
+                        <h4>3️⃣ 好用性（Efficiency）</h4>
+                        <div class="feature-item">
+                            • 快速完成任務<br>
+                            • 減少點擊步驟<br>
+                            • 智能預設值
+                        </div>
+                    </div>
+                    <div>
+                        <h4>4️⃣ 好看性（Aesthetics）</h4>
+                        <div class="feature-item">
+                            • 一致的設計風格<br>
+                            • 舒適的色彩搭配<br>
+                            • 優雅的動畫過渡
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">RWD 響應式設計</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>裝置</th>
+                            <th>寬度</th>
+                            <th>設計策略</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>手機</strong></td>
+                            <td>&lt; 576px</td>
+                            <td>單列、大按鈕、簡化導航</td>
+                        </tr>
+                        <tr>
+                            <td><strong>平板</strong></td>
+                            <td>576-992px</td>
+                            <td>兩列、適度空間、中等字體</td>
+                        </tr>
+                        <tr>
+                            <td><strong>桌面</strong></td>
+                            <td>&gt; 992px</td>
+                            <td>多列、充分空間、側邊欄</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 20px;">CSS Media Query 範例</h3>
+                <div class="prompt-box" style="font-size: 13px;">
+@media (max-width: 768px) {
+  .container { grid-template-columns: 1fr; }
+  h1 { font-size: 24px; }
+  button { width: 100%; padding: 16px; }
+}
+
+@media (min-width: 1024px) {
+  .container { grid-template-columns: repeat(3, 1fr); }
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: 部署實戰 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🚀 部署實戰</h2>
+
+                <h3>Antigravity + Netlify 完整流程</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="step-indicator">1</span>
+                        <strong>Antigravity 開發</strong><br>
+                        使用 Antigravity IDE 開發應用、測試功能
+                    </div>
+                    <div class="feature-item">
+                        <span class="step-indicator">2</span>
+                        <strong>版本控制</strong><br>
+                        將代碼推送到 GitHub（Antigravity 內置集成）
+                    </div>
+                    <div class="feature-item">
+                        <span class="step-indicator">3</span>
+                        <strong>Netlify 連接</strong><br>
+                        在 Netlify 中連接 GitHub 倉庫
+                    </div>
+                    <div class="feature-item">
+                        <span class="step-indicator">4</span>
+                        <strong>自動部署</strong><br>
+                        Git Push 自動觸發構建和部署
+                    </div>
+                    <div class="feature-item">
+                        <span class="step-indicator">5</span>
+                        <strong>域名設置</strong><br>
+                        配置自定義域名或使用 Netlify 子域
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">案例：貪食蛇遊戲部署</h3>
+                <div class="box success">
+                    <strong>📦 構建配置</strong><br>
+                    <code>Build Command</code>: npm run build<br>
+                    <code>Publish Directory</code>: dist/<br>
+                    <code>Environment Variables</code>: API 金鑰設置
+                </div>
+
+                <h3 style="margin-top: 25px;">部署檢查清單</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        ✅ 所有資源使用相對路徑或 CDN 連結<br>
+                    </div>
+                    <div class="feature-item">
+                        ✅ API 端點已在生產環境配置<br>
+                    </div>
+                    <div class="feature-item">
+                        ✅ 敏感資訊使用環境變數（不提交到倉庫）<br>
+                    </div>
+                    <div class="feature-item">
+                        ✅ 應用已在本地完整測試<br>
+                    </div>
+                    <div class="feature-item">
+                        ✅ 跨域 CORS 問題已解決<br>
+                    </div>
+                    <div class="feature-item">
+                        ✅ 性能優化完成（圖片壓縮、代碼分割）<br>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">常見部署問題</h3>
+                <div class="box warning">
+                    <strong>⚠️ CORS 錯誤</strong><br>
+                    使用 CORS 代理或在後端設置允許列表
+                </div>
+                <div class="box error">
+                    <strong>❌ 依賴問題</strong><br>
+                    確保 package-lock.json 已提交，依賴版本一致
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: 360 實景照片的平台要求 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>📸 360 實景照片：FB 與平台要求</h2>
+
+                <div class="box info">
+                    <strong>想在 Facebook 分享 360 全景照片？</strong><br>
+                    Facebook 支援直接上傳 360 照片，但需要符合特定規格才能正確顯示。
+                </div>
+
+                <h3>Facebook 360 照片規格要求</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>要求</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>長寬比</strong></td>
+                            <td>2:1</td>
+                            <td>例如 4096×2048、6000×3000</td>
+                        </tr>
+                        <tr>
+                            <td><strong>最小寬度</strong></td>
+                            <td>4096 像素</td>
+                            <td>低於此會被當作一般照片</td>
+                        </tr>
+                        <tr>
+                            <td><strong>檔案格式</strong></td>
+                            <td>JPEG</td>
+                            <td>需包含 XMP 元數據</td>
+                        </tr>
+                        <tr>
+                            <td><strong>投影方式</strong></td>
+                            <td>等距長方投影</td>
+                            <td>Equirectangular Projection</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>AI 生成 360 照片的 Prompt 技巧</h3>
+                <div class="code-block">
+Generate a 360-degree panoramic image with:
+- Aspect ratio: 2:1 (e.g., 4096x2048 pixels)
+- Projection: Equirectangular
+- Scene: [你想要的場景描述]
+- Seamless edges: Left and right edges must connect smoothly
+- Style: [風格描述，如 realistic, artistic, futuristic]
+                </div>
+
+                <h3>常見問題排解</h3>
+                <div class="concept-grid">
+                    <div class="concept-card" style="background: linear-gradient(135deg, #f44336 0%, #c62828 100%);">
+                        <h4>❌ 照片沒有變成 360</h4>
+                        <p>檢查長寬比是否正確為 2:1<br>確認圖片寬度 ≥ 4096px</p>
+                    </div>
+                    <div class="concept-card" style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);">
+                        <h4>✅ 正確做法</h4>
+                        <p>使用支援 XMP 元數據的編輯軟體<br>或使用專業 360 相機拍攝</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: RWD 手機適配與測試 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>📱 RWD 手機適配與測試技巧</h2>
+
+                <div class="box warning">
+                    <strong>重要觀念：</strong>現在超過 60% 的用戶使用手機瀏覽網頁，RWD（響應式設計）是必備技能！
+                </div>
+
+                <h3>讓 AI 幫你做 RWD 的 Prompt</h3>
+                <div class="code-block">
+請確保這個網頁是響應式設計（RWD），需要：
+1. 手機版（< 768px）：單欄佈局，按鈕放大便於觸控
+2. 平板版（768px - 1024px）：雙欄佈局
+3. 桌面版（> 1024px）：多欄佈局，充分利用空間
+4. 所有圖片需要自適應大小
+5. 字體大小在手機上要放大以便閱讀
+                </div>
+
+                <h3>如何測試手機版？</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>🖥️ Chrome DevTools</h4>
+                        <p>按 F12 → 點擊手機圖示<br>可模擬各種裝置尺寸</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>📱 真實裝置測試</h4>
+                        <p>用手機掃 QR Code 連結<br>實際體驗觸控操作</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🔗 線上工具</h4>
+                        <p>Responsively App<br>同時預覽多種尺寸</p>
+                    </div>
+                </div>
+
+                <h3>RWD 常見斷點設定</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>裝置類型</th>
+                            <th>寬度範圍</th>
+                            <th>設計重點</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>手機</strong></td>
+                            <td>< 768px</td>
+                            <td>單欄、大按鈕、簡化導航</td>
+                        </tr>
+                        <tr>
+                            <td><strong>平板</strong></td>
+                            <td>768px - 1024px</td>
+                            <td>雙欄、側邊選單</td>
+                        </tr>
+                        <tr>
+                            <td><strong>筆電</strong></td>
+                            <td>1024px - 1440px</td>
+                            <td>多欄、完整功能</td>
+                        </tr>
+                        <tr>
+                            <td><strong>大螢幕</strong></td>
+                            <td>> 1440px</td>
+                            <td>限制最大寬度、置中</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="box success">
+                    <strong>小提示：</strong>開發時養成「先做手機版，再擴展到桌面版」的習慣（Mobile First），這樣更容易做好 RWD！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: 鏡頭與麥克風使用限制 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>📹 鏡頭與麥克風：平台限制須知</h2>
+
+                <div class="box error">
+                    <strong>重要警告：</strong>不同平台對鏡頭和麥克風的存取有不同限制，這會影響你的應用功能！
+                </div>
+
+                <h3>iOS vs Android 差異</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>iOS Safari</th>
+                            <th>Android Chrome</th>
+                            <th>桌面瀏覽器</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>鏡頭存取</strong></td>
+                            <td>需 HTTPS + 用戶授權</td>
+                            <td>需 HTTPS + 用戶授權</td>
+                            <td>localhost 可用 HTTP</td>
+                        </tr>
+                        <tr>
+                            <td><strong>背景執行</strong></td>
+                            <td>❌ 切換 App 會停止</td>
+                            <td>⚠️ 有限制</td>
+                            <td>✅ 可持續</td>
+                        </tr>
+                        <tr>
+                            <td><strong>多鏡頭切換</strong></td>
+                            <td>⚠️ API 限制較多</td>
+                            <td>✅ 支援較好</td>
+                            <td>依硬體而定</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AR 功能</strong></td>
+                            <td>僅支援 ARKit</td>
+                            <td>支援 WebXR</td>
+                            <td>支援 WebXR</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>開發手勢控制/視訊應用的注意事項</h3>
+                <div class="concept-grid">
+                    <div class="concept-card" style="background: linear-gradient(135deg, #ff9800 0%, #e65100 100%);">
+                        <h4>⚠️ HTTPS 必要</h4>
+                        <p>除了 localhost，所有鏡頭/麥克風功能都需要 HTTPS 才能運作</p>
+                    </div>
+                    <div class="concept-card" style="background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);">
+                        <h4>📱 權限提示</h4>
+                        <p>要清楚告訴用戶為什麼需要權限，否則他們會拒絕授權</p>
+                    </div>
+                    <div class="concept-card" style="background: linear-gradient(135deg, #9c27b0 0%, #6a1b9a 100%);">
+                        <h4>🔄 降級方案</h4>
+                        <p>準備替代方案：如果用戶拒絕授權，應用仍能使用基本功能</p>
+                    </div>
+                </div>
+
+                <h3>Prompt 範例：建立有權限處理的應用</h3>
+                <div class="code-block">
+請建立一個使用鏡頭的應用，需要：
+1. 檢測是否支援 getUserMedia API
+2. 優雅地處理權限被拒絕的情況
+3. 提供清楚的錯誤訊息
+4. 在 iOS Safari 上測試過可運作
+5. 支援前後鏡頭切換（如果可用）
+                </div>
+
+                <div class="box info">
+                    <strong>測試建議：</strong>開發完成後，務必在真實的 iOS 和 Android 裝置上測試，模擬器可能無法完全反映真實情況。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: 3D 地球應用案例 - 生活化 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🌍 3D 地球應用：生活實用案例</h2>
+
+                <div class="box info">
+                    <strong>3D 地球不只是炫技！</strong><br>
+                    結合即時資料，可以做出許多實用的生活應用。
+                </div>
+
+                <h3>生活應用案例</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>✈️ 旅遊規劃助手</h4>
+                        <p>• 標記想去的地點<br>
+                        • 顯示各地天氣和最佳旅遊季節<br>
+                        • 計算時差和飛行時間</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>📰 全球新聞視覺化</h4>
+                        <p>• 在地圖上顯示新聞發生地<br>
+                        • 即時更新國際新聞<br>
+                        • 點擊地點查看詳情</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🌤️ 全球天氣追蹤</h4>
+                        <p>• 關心的城市即時天氣<br>
+                        • 颱風/暴風雨路徑追蹤<br>
+                        • 空氣品質指數顯示</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>👥 朋友位置地圖</h4>
+                        <p>• 標記海外朋友的位置<br>
+                        • 顯示當地時間<br>
+                        • 規劃聚會地點</p>
+                    </div>
+                </div>
+
+                <h3>實作 Prompt 範例</h3>
+                <div class="code-block">
+使用 Three.js 建立一個 3D 地球儀應用：
+1. 可以旋轉和縮放的地球模型
+2. 顯示使用者標記的地點（用大頭針表示）
+3. 點擊地點顯示：城市名稱、當地時間、天氣（使用免費天氣 API）
+4. 支援新增和刪除地點
+5. 資料儲存在 LocalStorage
+6. 響應式設計，手機上也能操作
+                </div>
+
+                <div class="box success">
+                    <strong>延伸應用：</strong>你也可以加入航班追蹤、地震監測、太空站位置等即時資料，讓地球儀更加實用！
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Part 6 總結 + 進入 Part 7 按鈕 -->
+        <div class="slide">
+            <div class="content-card part-cover">
+                <h1>Part 6 總結</h1>
+                <p class="part-description">
+                    進階應用與實戰
+                </p>
+
+                <h3 style="text-align: center; color: #667eea; margin-top: 35px;">核心收穫</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>🌐 360°圖片</h4>
+                        <p>生成和展示沉浸式全景場景</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🎬 影片生成</h4>
+                        <p>使用 AI 生成多場景短片</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🌍 3D 應用</h4>
+                        <p>WebGL 互動式天氣儀表板</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>✋ 手勢控制</h4>
+                        <p>沉浸式遊戲互動體驗</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🎨 UI/UX 設計</h4>
+                        <p>專業級用戶體驗設計</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🚀 部署上線</h4>
+                        <p>完整的生產環境部署</p>
+                    </div>
+                </div>
+
+                <div class="box success" style="margin-top: 35px; text-align: center;">
+                    <strong>🎓 學習成果</strong><br>
+                    你已經掌握了 VibeCoding 的所有核心技術和進階應用！<br>
+                    現在準備好探索 AI 時代開發者的未來定位。
+                </div>
+
+                <div class="btn-container">
+                    <a href="Part7_課程總結與未來展望.html" class="next-part-btn">
+                        ➜ 進入 Part 7: 課程總結與未來展望
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function init() {
+            createIndicators();
+            showSlide(0);
+            updateButtons();
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        }
+
+        function createIndicators() {
+            const container = document.getElementById('indicatorContainer');
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => goToSlide(index);
+                container.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            currentSlide = index;
+            document.querySelectorAll('.dot').forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === index);
+            });
+            updateButtons();
+            document.getElementById('currentPage').textContent = currentSlide + 1;
+            const activeCard = slides[index].querySelector('.content-card');
+            if (activeCard) activeCard.scrollTop = 0;
+        }
+
+        function changeSlide(direction) { showSlide(currentSlide + direction); }
+        function goToSlide(index) { showSlide(index); }
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

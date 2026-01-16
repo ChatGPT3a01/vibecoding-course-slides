@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 2: AI 協作開發工具 - VibeCoding 氣圍編碼</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-buttons { display: flex; gap: 12px; }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            color: white;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            padding-top: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            top: 60px; left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            z-index: 20;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        h1 { color: #667eea; font-size: 52px; margin-bottom: 20px; text-align: center; font-weight: 800; }
+        h2 { color: #764ba2; font-size: 36px; margin-bottom: 25px; border-bottom: 3px solid #667eea; padding-bottom: 12px; font-weight: 700; }
+        h3 { color: #667eea; font-size: 24px; margin: 20px 0 12px 0; font-weight: 600; }
+        h4 { color: #555; font-size: 20px; margin: 15px 0 10px 0; font-weight: 600; }
+        p, li { font-size: 18px; line-height: 1.7; color: #444; margin-bottom: 12px; }
+
+        code {
+            background: #f0f2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .tip { background: #f3e5f5; border-color: #9c27b0; color: #4a148c; }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #004d40;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .concept-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .concept-card h3, .concept-card h4 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .concept-card p {
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 0;
+            font-size: 16px;
+        }
+
+        ul, ol { margin-left: 25px; margin-bottom: 18px; }
+        li { margin-bottom: 10px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover { background: rgba(102, 126, 234, 0.05); }
+
+        .indicators {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 4000;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active { background: #84fab0; transform: scale(1.3); }
+        .dot:hover { background: rgba(255,255,255,0.7); transform: scale(1.2); }
+
+        .part-cover {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        .part-number {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .part-title {
+            font-size: 48px;
+            color: #667eea;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .part-description {
+            font-size: 22px;
+            color: #666;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .next-part-btn {
+            display: inline-block;
+            margin-top: 35px;
+            padding: 16px 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 19px;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .next-part-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        .three-column {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .step-indicator {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            line-height: 1.4;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 15px;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        .feature-check {
+            color: #28a745;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .feature-cross {
+            color: #dc3545;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 30px 20px; }
+            h1 { font-size: 32px; }
+            h2 { font-size: 26px; }
+            .concept-grid { grid-template-columns: 1fr; }
+            .two-column { grid-template-columns: 1fr; }
+            .three-column { grid-template-columns: 1fr; }
+        }
+
+        .content-card::-webkit-scrollbar { width: 8px; }
+        .content-card::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .content-card::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-title">Part 2: AI 協作開發工具 | 頁碼: <span id="currentPage">1</span> / 22</div>
+        <div class="nav-buttons">
+            <a href="Part0_課程導覽.html" class="nav-btn">⬅ Part 0</a>
+            <a href="Part1_VibeCoding基礎與提示工程.html" class="nav-btn">⬅ Part 1</a>
+            <a href="Part3_無程式碼前端生成.html" class="nav-btn">Part 3 ➜</a>
+            <button class="nav-btn" onclick="toggleFullscreen()">全螢幕</button>
+        </div>
+    </div>
+
+    <div class="slide-container">
+        <!-- Slide 1: Part 2 封面 -->
+        <div class="slide active">
+            <div class="content-card part-cover">
+                <div class="part-number">Part 2</div>
+                <div class="part-title">AI 協作開發工具</div>
+                <p class="part-description">
+                    掌握四大前沿 AI IDE 與編程環境<br>
+                    使用 Cursor、GitHub Copilot、Windsurf、Antigravity<br>
+                    實現高效的 AI 協作編程
+                </p>
+                <div style="margin-top: 40px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                    <span class="highlight">Cursor IDE</span>
+                    <span class="highlight">GitHub Copilot</span>
+                    <span class="highlight">Windsurf</span>
+                    <span class="highlight">Antigravity</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: AI 協作編程概述 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>什麼是 AI 協作編程？</h2>
+
+                <div class="box info">
+                    <strong>AI 協作編程定義</strong><br>
+                    不是單純的代碼自動生成，而是人與 AI 的深度協作。開發者用自然語言描述需求，AI 理解上下文並主動提示、建議、生成代碼，開發者驗證、修改並指導 AI 改進。
+                </div>
+
+                <h3>與傳統 IDE 的區別</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>維度</th>
+                            <th>傳統 IDE</th>
+                            <th>AI 協作 IDE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>代碼生成</strong></td>
+                            <td>開發者手動編寫</td>
+                            <td>AI 主動建議與生成</td>
+                        </tr>
+                        <tr>
+                            <td><strong>上下文理解</strong></td>
+                            <td>基於語法高亮</td>
+                            <td>深度語義與邏輯理解</td>
+                        </tr>
+                        <tr>
+                            <td><strong>文件管理</strong></td>
+                            <td>手動開啟/切換</td>
+                            <td>AI 自動理解整體架構</td>
+                        </tr>
+                        <tr>
+                            <td><strong>錯誤修復</strong></td>
+                            <td>開發者調試</td>
+                            <td>AI 主動檢測與修復建議</td>
+                        </tr>
+                        <tr>
+                            <td><strong>學習效率</strong></td>
+                            <td>需要查文件、Google</td>
+                            <td>AI 即時解釋與教學</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>工具選擇指南</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>快速原型設計</h4>
+                        <p>Cursor IDE 或 Windsurf<br>自然對話，快速迭代，最適合初學者</p>
+                    </div>
+                    <div>
+                        <h4>大型團隊開發</h4>
+                        <p>GitHub Copilot<br>整合 GitHub 工作流，版本控制友善</p>
+                    </div>
+                    <div>
+                        <h4>雲端自動化</h4>
+                        <p>Antigravity<br>自動測試、部署、無需本地配置</p>
+                    </div>
+                    <div>
+                        <h4>全棧應用</h4>
+                        <p>Cursor + Windsurf 組合<br>前後端同步開發</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Cursor 簡介與特色 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Cursor IDE 簡介與特色</h2>
+
+                <div class="box success">
+                    <strong>Cursor 是什麼？</strong><br>
+                    基於 VSCode 構建的最強 AI 協作編程 IDE。完全相容 VSCode 擴展，同時深度整合多個 AI 模型（GPT-4、Claude、Gemini），提供無與倫比的代碼智能。
+                </div>
+
+                <h3>核心特色</h3>
+                <div class="three-column">
+                    <div class="concept-card">
+                        <h4>Cmd/Ctrl + K</h4>
+                        <p>快速代碼生成與編輯，無需離開編輯器</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>Cmd/Ctrl + L</h4>
+                        <p>邊寫邊有 AI 幫你完成，像心靈感應一樣</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>@symbols</h4>
+                        <p>引用當前工作區的任何函數、類、變數</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>Codebase AI</h4>
+                        <p>AI 理解整個專案結構，實現真正的全局優化</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>Chat</h4>
+                        <p>邊修改代碼邊對話，實時反饋與修改</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>多模型支援</h4>
+                        <p>GPT-4、Claude 3.5、Gemini 隨時切換</p>
+                    </div>
+                </div>
+
+                <h3>為什麼選擇 Cursor？</h3>
+                <ul>
+                    <li><strong>學習最快</strong>：無縫的 AI 體驗，幾分鐘就能上手</li>
+                    <li><strong>代碼品質最高</strong>：AI 理解你的設計模式，生成的代碼風格一致</li>
+                    <li><strong>社群活躍</strong>：大量教學、模板、最佳實踐共享</li>
+                    <li><strong>功能持續更新</strong>：每週新功能，快速迭代</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 4: Cursor 安裝與基本設定 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Cursor 安裝與基本設定</h2>
+
+                <h3>安裝步驟</h3>
+                <ol>
+                    <li><strong>訪問官網</strong>：https://cursor.com</li>
+                    <li><strong>下載安裝器</strong>：選擇對應系統（Windows/Mac/Linux）</li>
+                    <li><strong>執行安裝</strong>：一路 Next，約 2 分鐘完成</li>
+                    <li><strong>首次啟動</strong>：會自動引導初始設定</li>
+                </ol>
+
+                <h3>初始設定</h3>
+                <div class="box warning">
+                    <strong>選擇 AI 模型</strong><br>
+                    推薦新手選擇 GPT-4 或 Claude 3.5 Sonnet。Claude 擅長中文，GPT-4 推理能力強。可在設定中隨時切換。
+                </div>
+
+                <h3>關鍵設定項目</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>設定項</th>
+                            <th>建議值</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>AI Model</code></td>
+                            <td>GPT-4 或 Claude</td>
+                            <td>決定 AI 的智能程度</td>
+                        </tr>
+                        <tr>
+                            <td><code>Temperature</code></td>
+                            <td>0.3-0.5</td>
+                            <td>越低越穩定，越高越創意</td>
+                        </tr>
+                        <tr>
+                            <td><code>Max Tokens</code></td>
+                            <td>2048</td>
+                            <td>生成代碼的最大長度</td>
+                        </tr>
+                        <tr>
+                            <td><code>Codebase Indexing</code></td>
+                            <td>啟用</td>
+                            <td>讓 AI 理解你的全部代碼</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>快捷鍵速查</h3>
+                <div class="code-block">Cmd/Ctrl + K    → 快速生成/編輯代碼
+Cmd/Ctrl + L    → 逐行代碼補全
+Cmd/Ctrl + I    → 打開 AI Chat 面板
+@codebase       → 引用整個專案
+@files          → 選擇要引用的文件
+Cmd/Ctrl + /    → 快速註釋 AI 完成
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 核心功能 - AI 代碼生成 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>核心功能：AI 代碼生成</h2>
+
+                <h3>Cmd/Ctrl + K 實踐</h3>
+                <div class="box success">
+                    <strong>使用場景</strong><br>
+                    想要生成某段代碼時，選中代碼區域或放置光標，按 Cmd/Ctrl + K，用自然語言描述需求，Cursor 會生成完整代碼。
+                </div>
+
+                <h3>實例 1：生成函數</h3>
+                <p><strong>輸入提示：</strong> "寫一個函數，接收數字陣列，返回所有偶數的平方和"</p>
+                <div class="code-block">function sumSquareEvenNumbers(arr) {
+  return arr
+    .filter(num => num % 2 === 0)
+    .reduce((sum, num) => sum + num * num, 0);
+}</div>
+
+                <h3>實例 2：生成 React 元件</h3>
+                <p><strong>輸入提示：</strong> "寫一個 React TodoList 元件，有添加、刪除、完成任務的功能"</p>
+                <div class="code-block">import { useState } from 'react';
+
+export default function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, { id: Date.now(), text: input, done: false }]);
+      setInput('');
+    }
+  };
+
+  return (
+    &lt;div className="p-6"&gt;
+      &lt;h1&gt;我的待辦清單&lt;/h1&gt;
+      {/* 顯示和管理任務的代碼 */}
+    &lt;/div&gt;
+  );
+}</div>
+
+                <h3>進階技巧：使用 @symbols</h3>
+                <div class="box tip">
+                    <strong>@codebase 的魔力</strong><br>
+                    在提示中輸入 @ 可快速引用已有的函數、類、變數。例如："使用 @calculateTotal 函數計算總價" 會自動引用該函數的完整定義，確保 AI 生成的代碼相容。
+                </div>
+
+                <h3>生成質量提升秘訣</h3>
+                <ul>
+                    <li>提示越詳細越好：包括輸入、輸出、邊界條件</li>
+                    <li>提供例子：「例如 [1,2,3] 應返回 14」會大幅提升準確度</li>
+                    <li>指定語言/框架：「用 React Hooks 和 Tailwind CSS」</li>
+                    <li>描述設計模式：「使用 MVC 架構」或「遵循 SOLID 原則」</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 6: 核心功能 - AI 代碼修改與重構 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>核心功能：AI 代碼修改與重構</h2>
+
+                <h3>快速修改流程</h3>
+                <div class="box info">
+                    <strong>Cmd/Ctrl + K 也用於修改</strong><br>
+                    選中現有代碼，按 Cmd/Ctrl + K，輸入修改需求（如"優化性能"、"加上錯誤處理"、"轉換為異步"），Cursor 直接在原位置修改。
+                </div>
+
+                <h3>常見修改需求</h3>
+                <div class="three-column">
+                    <div class="concept-card">
+                        <h4>優化性能</h4>
+                        <p>"優化此函數的時間複雜度"</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>錯誤處理</h4>
+                        <p>"加入 try-catch 與驗證"</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>單元測試</h4>
+                        <p>"為此函數寫 Jest 測試"</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>代碼重構</h4>
+                        <p>"轉換為函數式編程風格"</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>文檔化</h4>
+                        <p>"加上 JSDoc 註釋"</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>語言轉換</h4>
+                        <p>"將此代碼轉換為 Python"</p>
+                    </div>
+                </div>
+
+                <h3>實例：代碼優化</h3>
+                <p><strong>原始代碼：</strong></p>
+                <div class="code-block">function findDuplicates(arr) {
+  const duplicates = [];
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      if (arr[i] === arr[j]) {
+        duplicates.push(arr[i]);
+      }
+    }
+  }
+  return duplicates;
+}</div>
+
+                <p><strong>優化後（選中代碼 → Cmd/Ctrl+K → "優化性能"）：</strong></p>
+                <div class="code-block">function findDuplicates(arr) {
+  const seen = new Set();
+  return [...new Set(arr.filter(item =>
+    seen.has(item) || !(seen.add(item) || false)
+  ))];
+}</div>
+
+                <h3>批量重構提示</h3>
+                <ul>
+                    <li>"將此檔案中的所有 var 改為 const"</li>
+                    <li>"為所有 API 呼叫加上超時設定"</li>
+                    <li>"將回調函數轉換為 Promise/async-await"</li>
+                    <li>"提取魔法數字為具名常數"</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 7: Cursor 實作演練 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作演練：用 Cursor 建立第一個專案</h2>
+
+                <h3>目標專案：天氣查詢應用</h3>
+                <p>一個簡單的 React 應用，能查詢任意城市的天氣，展示溫度、濕度、風速。</p>
+
+                <h3>第 1 步：初始化專案</h3>
+                <div class="code-block">在 Cursor 終端執行：
+npx create-react-app weather-app
+cd weather-app
+npm install axios</div>
+
+                <h3>第 2 步：Cursor 快速生成</h3>
+                <ol>
+                    <li>打開 <code>src/App.js</code></li>
+                    <li>全選代碼，按 Cmd/Ctrl + K</li>
+                    <li>輸入提示：<br>
+                    <em>"寫一個天氣查詢應用，有搜尋框、使用 OpenWeatherMap API、顯示溫度、濕度、風速、使用 Tailwind CSS 美化界面"</em></li>
+                    <li>等待 AI 生成完整代碼，按 Accept</li>
+                </ol>
+
+                <h3>第 3 步：添加 API Key</h3>
+                <p>創建 <code>.env</code> 檔案：</p>
+                <div class="code-block">REACT_APP_API_KEY=your_openweathermap_key</div>
+
+                <h3>第 4 步：修改與優化</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>修改 1：錯誤處理</h4>
+                        <p>選中 API 呼叫代碼 → Cmd/Ctrl+K → "加入錯誤處理與 loading 狀態"</p>
+                    </div>
+                    <div>
+                        <h4>修改 2：添加功能</h4>
+                        <p>新增搜尋記錄 → Cmd/Ctrl+K → "用 localStorage 保存最近 5 個搜尋"</p>
+                    </div>
+                </div>
+
+                <h3>第 5 步：運行與測試</h3>
+                <div class="code-block">npm start</div>
+
+                <div class="box success">
+                    <strong>完成！</strong>你剛剛用 Cursor 和 AI 在 10 分鐘內完成了一個完整的實用應用。傳統方式可能需要 2-3 小時。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: GitHub Copilot 簡介與六大功能 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>GitHub Copilot 簡介與六大功能</h2>
+
+                <div class="box success">
+                    <strong>GitHub Copilot 是什麼？</strong><br>
+                    由 GitHub 和 OpenAI 合作開發，基於 Codex 模型的代碼自動補全工具。深度整合 GitHub 工作流，支援所有主流 IDE（VS Code、JetBrains、Visual Studio、Neovim）。
+                </div>
+
+                <h3>六大核心功能</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>1. 自動補全</h4>
+                        <p>即時預測並補全代碼，從單行到整個函數，大幅提升編寫速度</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>2. Copilot Chat</h4>
+                        <p>在 IDE 中與 AI 對話，詢問問題、解釋代碼、討論架構設計</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>3. 註解驅動開發</h4>
+                        <p>撰寫註解描述需求，Copilot 自動生成對應的完整代碼實現</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>4. 單元測試生成</h4>
+                        <p>自動為函數生成測試用例，提升代碼品質與覆蓋率</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>5. 程式碼重構</h4>
+                        <p>智能建議代碼優化方案，改善效能與可讀性</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>6. 文件生成</h4>
+                        <p>自動生成 JSDoc、docstring 等文檔註釋，保持代碼文檔同步</p>
+                    </div>
+                </div>
+
+                <h3>支援環境</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>IDE</th>
+                            <th>支援程度</th>
+                            <th>特色</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>VS Code</strong></td>
+                            <td><span class="feature-check">✓</span> 完整支援</td>
+                            <td>官方首選，功能最完整</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Visual Studio</strong></td>
+                            <td><span class="feature-check">✓</span> 完整支援</td>
+                            <td>適合 .NET 開發者</td>
+                        </tr>
+                        <tr>
+                            <td><strong>JetBrains 系列</strong></td>
+                            <td><span class="feature-check">✓</span> 完整支援</td>
+                            <td>IntelliJ、PyCharm、WebStorm 等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Neovim</strong></td>
+                            <td><span class="feature-check">✓</span> 支援</td>
+                            <td>終端機愛好者首選</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="box info">
+                    <strong>選擇建議</strong><br>
+                    • 團隊開發 + 版本控制整合 → GitHub Copilot<br>
+                    • 個人快速原型開發 → Cursor<br>
+                    • 企業級安全需求 → Copilot for Business
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: GitHub Copilot 安裝與授權 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>GitHub Copilot 安裝與授權</h2>
+
+                <h3>安裝前準備</h3>
+                <ul>
+                    <li>GitHub 帳號（GitHub.com 免費註冊）</li>
+                    <li>VS Code 或其他支援的 IDE</li>
+                    <li>Copilot 訂閱（免費試用 60 天，之後 $10/月）</li>
+                </ul>
+
+                <h3>安裝步驟（以 VS Code 為例）</h3>
+                <ol>
+                    <li>打開 VS Code 擴展市場（左側 Extensions）</li>
+                    <li>搜尋 "GitHub Copilot"</li>
+                    <li>點擊 "Install"，安裝官方擴展</li>
+                    <li>重啟 VS Code</li>
+                    <li>點擊下方狀態欄的 "Sign in with GitHub"</li>
+                    <li>瀏覽器會跳轉到 GitHub 授權頁面</li>
+                    <li>點擊 "Authorize"，完成授權</li>
+                </ol>
+
+                <h3>訂閱計畫</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>計畫</th>
+                            <th>價格</th>
+                            <th>適用對象</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>免費試用</strong></td>
+                            <td>$0 × 60 天</td>
+                            <td>所有用戶</td>
+                        </tr>
+                        <tr>
+                            <td><strong>個人訂閱</strong></td>
+                            <td>$10/月</td>
+                            <td>個人開發者</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Copilot Business</strong></td>
+                            <td>$19/月（按座位）</td>
+                            <td>企業團隊</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>設定 Copilot 行為</h3>
+                <div class="box warning">
+                    <strong>關鍵設定</strong><br>
+                    進入 VS Code 設定 → 搜尋 "Copilot"<br>
+                    • 啟用/禁用特定語言補全<br>
+                    • 設定補全觸發延遲<br>
+                    • 啟用/禁用建議預覽
+                </div>
+
+                <h3>確認成功安裝</h3>
+                <p>編寫代碼時，你會看到灰色的代碼建議。按 Tab 接受，按 Esc 拒絕。</p>
+            </div>
+        </div>
+
+        <!-- Slide 10: 即時代碼建議與補全 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>即時代碼建議與補全</h2>
+
+                <h3>Copilot 的兩種工作模式</h3>
+                <div class="two-column">
+                    <div class="concept-card">
+                        <h4>自動補全</h4>
+                        <p>邊打邊建議，提高編寫速度 50-70%</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>手動觸發</h4>
+                        <p>按 Ctrl+Enter 手動呼喚建議</p>
+                    </div>
+                </div>
+
+                <h3>實例 1：函數名建議</h3>
+                <p>你輸入：<code>function get</code></p>
+                <p>Copilot 建議：<code>getUserById</code>、<code>getProductList</code> 等</p>
+
+                <h3>實例 2：註釋生成代碼</h3>
+                <p><strong>註釋：</strong> <code>// 計算年齡</code></p>
+                <div class="code-block">function calculateAge(birthDate) {
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    return age - 1;
+  }
+  return age;
+}</div>
+
+                <h3>實例 3：測試代碼生成</h3>
+                <p><strong>已有代碼：</strong></p>
+                <div class="code-block">function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// 測試：</div>
+
+                <p><strong>Copilot 自動補全：</strong></p>
+                <div class="code-block">const test1 = capitalize('hello'); // 'Hello'
+const test2 = capitalize('world'); // 'World'
+console.assert(test1 === 'Hello');
+console.assert(test2 === 'World');</div>
+
+                <h3>提升建議品質的方法</h3>
+                <ul>
+                    <li><strong>寫明確的註釋</strong>：Copilot 會根據註釋生成代碼</li>
+                    <li><strong>保留上下文</strong>：不要刪除相關代碼，讓 Copilot 理解邏輯</li>
+                    <li><strong>使用類型提示</strong>：TypeScript 會產生更精準的建議</li>
+                    <li><strong>循序漸進</strong>：一步步編寫，每次一個小功能</li>
+                    <li><strong>看多個建議</strong>：Alt+[ / Alt+] 快速切換建議</li>
+                </ul>
+
+                <div class="box tip">
+                    <strong>快捷鍵速查</strong><br>
+                    Tab → 接受建議<br>
+                    Esc → 拒絕建議<br>
+                    Alt + [ → 上一個建議<br>
+                    Alt + ] → 下一個建議<br>
+                    Ctrl + Enter → 顯示 10 個建議
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Copilot Chat 對話功能 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Copilot Chat 對話功能</h2>
+
+                <h3>Copilot Chat 簡介</h3>
+                <div class="box success">
+                    <strong>Copilot X 的新功能</strong><br>
+                    在 IDE 中開啟對話面板，像 ChatGPT 一樣與 Copilot 對話，但有代碼上下文。可以問問題、解釋代碼、生成測試、討論架構。
+                </div>
+
+                <h3>打開 Chat 面板</h3>
+                <ol>
+                    <li>VS Code 左側選擇 GitHub Copilot Chat 圖標</li>
+                    <li>或按快捷鍵：<code>Ctrl+Shift+I</code>（Windows）/ <code>Cmd+Shift+I</code>（Mac）</li>
+                    <li>右側會打開對話面板</li>
+                </ol>
+
+                <h3>實用的 Chat 命令</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>命令</th>
+                            <th>用途</th>
+                            <th>示例</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/explain</code></td>
+                            <td>解釋選中代碼</td>
+                            <td>選中函數 → /explain</td>
+                        </tr>
+                        <tr>
+                            <td><code>/doc</code></td>
+                            <td>生成文檔</td>
+                            <td>選中類 → /doc</td>
+                        </tr>
+                        <tr>
+                            <td><code>/test</code></td>
+                            <td>生成單元測試</td>
+                            <td>選中函數 → /test</td>
+                        </tr>
+                        <tr>
+                            <td><code>/fix</code></td>
+                            <td>修復代碼問題</td>
+                            <td>選中錯誤代碼 → /fix</td>
+                        </tr>
+                        <tr>
+                            <td><code>@workspace</code></td>
+                            <td>引用整個專案</td>
+                            <td>"@workspace 怎樣組織目錄結構"</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>實例對話</h3>
+                <div class="box info">
+                    <strong>問：</strong>"@workspace 怎樣優化此項目的數據庫查詢性能？"<br>
+                    <strong>答：</strong>Copilot 會分析你的專案，提出具體建議，如添加索引、使用連接池等。
+                </div>
+
+                <h3>vs 自動補全的區別</h3>
+                <ul>
+                    <li><strong>自動補全</strong>：快速、無腦補完代碼，適合重複性工作</li>
+                    <li><strong>Chat</strong>：深度對話、解釋、設計決策，適合複雜問題</li>
+                </ul>
+
+                <p style="margin-top: 25px; color: #666; text-align: center;">
+                    <strong>建議用法：</strong>快速編寫用自動補全，遇到問題或複雜設計用 Chat
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 12: Windsurf 簡介 - 新一代 AI IDE -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windsurf 簡介：新一代 AI IDE</h2>
+
+                <div class="box info">
+                    <strong>Windsurf 是什麼？</strong><br>
+                    由 Codeium 公司推出的全新 AI IDE，2024 年最新發佈。設計理念是"更懂開發者的大腦"，提供比 Cursor 更自然的編程體驗。核心創新是 Flow Mode。
+                </div>
+
+                <h3>Windsurf 的三大創新</h3>
+                <div class="three-column">
+                    <div class="concept-card">
+                        <h4>Flow Mode</h4>
+                        <p>自然對話式編程，AI 理解整個工程</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>Cascade</h4>
+                        <p>代碼理解與編輯的智能融合</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>更快的推理</h4>
+                        <p>更加精準的代碼生成和修改</p>
+                    </div>
+                </div>
+
+                <h3>Windsurf vs Cursor：對比</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>Windsurf</th>
+                            <th>Cursor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>發佈時間</strong></td>
+                            <td>2024 年 Q3（最新）</td>
+                            <td>2023 年（相對成熟）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Flow Mode</strong></td>
+                            <td><span class="feature-check">✓</span> 核心功能</td>
+                            <td><span class="feature-cross">✗</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>代碼理解</strong></td>
+                            <td>更深層的語義理解</td>
+                            <td>較強的上下文理解</td>
+                        </tr>
+                        <tr>
+                            <td><strong>多模型支援</strong></td>
+                            <td><span class="feature-check">✓</span> GPT-4、Claude</td>
+                            <td><span class="feature-check">✓</span> GPT-4、Claude</td>
+                        </tr>
+                        <tr>
+                            <td><strong>團隊協作</strong></td>
+                            <td><span class="feature-check">✓</span> 內建支援</td>
+                            <td>不支援</td>
+                        </tr>
+                        <tr>
+                            <td><strong>學習曲線</strong></td>
+                            <td>陡峭（Flow Mode 需適應）</td>
+                            <td>平緩</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>推薦場景</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>選擇 Windsurf</h4>
+                        <p>• 大型專案重構<br>• 想要自然對話編程<br>• 需要團隊協作<br>• 願意學習新工具</p>
+                    </div>
+                    <div>
+                        <h4>選擇 Cursor</h4>
+                        <p>• 快速原型開發<br>• 習慣傳統 IDE<br>• 個人單獨開發<br>• 優先考慮穩定性</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Windsurf 安裝與快捷鍵 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windsurf 安裝與快捷鍵</h2>
+
+                <h3>安裝步驟</h3>
+                <ol>
+                    <li><strong>訪問官網</strong>：https://windsurf.com/download</li>
+                    <li><strong>選擇系統版本</strong>：支援 Windows、macOS、Linux</li>
+                    <li><strong>下載安裝器</strong>：根據作業系統下載對應安裝檔</li>
+                    <li><strong>執行安裝</strong>：Windows 用戶執行 .exe，Mac 用戶拖曳到應用程式</li>
+                    <li><strong>首次啟動</strong>：登入或註冊 Codeium 帳號</li>
+                </ol>
+
+                <h3>系統需求</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>最低需求</th>
+                            <th>建議配置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>作業系統</strong></td>
+                            <td>Windows 10 / macOS 10.15</td>
+                            <td>Windows 11 / macOS 13+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>記憶體</strong></td>
+                            <td>8 GB RAM</td>
+                            <td>16 GB RAM</td>
+                        </tr>
+                        <tr>
+                            <td><strong>硬碟空間</strong></td>
+                            <td>2 GB</td>
+                            <td>5 GB（含快取）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>網路</strong></td>
+                            <td>穩定連線</td>
+                            <td>高速網路</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>常用快捷鍵</h3>
+                <div class="code-block">Cmd/Ctrl + I    → 開啟內聯指令（Inline Commands）
+Cmd/Ctrl + L    → 開啟 Cascade 對話面板
+Cmd/Ctrl + Enter → 送出當前指令
+Cmd/Ctrl + K    → 快速代碼編輯
+Cmd/Ctrl + .    → 顯示快速修復建議
+Cmd/Ctrl + /    → 切換行註釋
+Cmd/Ctrl + Shift + P → 開啟命令面板</div>
+
+                <h3>進階快捷鍵</h3>
+                <div class="code-block">【編輯相關】
+Alt + ↑/↓           → 移動整行
+Cmd/Ctrl + D        → 選取下一個相同文字
+Cmd/Ctrl + Shift + K → 刪除整行
+
+【AI 相關】
+Tab                 → 接受 AI 建議
+Esc                 → 拒絕 AI 建議
+Alt + ]             → 下一個建議</div>
+
+                <div class="box tip">
+                    <strong>小技巧</strong><br>
+                    Windsurf 的 Cascade 功能是最核心的 AI 對話工具，建議先熟悉 <code>Cmd/Ctrl + L</code> 開啟對話面板，再學習 Flow Mode 的使用。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Windsurf 六大核心功能 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windsurf 六大核心功能</h2>
+
+                <div class="box info">
+                    <strong>Windsurf 的核心競爭力</strong><br>
+                    由 Codeium 公司開發，Windsurf 擁有六大獨特功能，讓 AI 協作編程達到全新境界。
+                </div>
+
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>1. Cascade 智慧助手</h4>
+                        <p>深度理解整個專案的 AI 對話助手，能自動分析程式碼庫、理解上下文關係，提供精準建議</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>2. Supercomplete 意圖預測</h4>
+                        <p>超越傳統補全，能預測開發者的下一步意圖，自動完成整段邏輯而非單行代碼</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>3. Flows 混合模式</h4>
+                        <p>結合 Agent（自動執行）與 Copilot（輔助建議）的混合工作模式，依需求自由切換</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>4. Live Preview 即時預覽</h4>
+                        <p>編輯器內建網頁預覽，修改代碼後立即看到效果，無需切換視窗或手動刷新</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>5. Rollback 一鍵回滾</h4>
+                        <p>對 AI 修改不滿意？一鍵回滾到修改前的狀態，不怕 AI 改壞代碼</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>6. Memory 記憶功能</h4>
+                        <p>學習你的專案特性與開發習慣，使用越久越懂你，建議越來越精準</p>
+                    </div>
+                </div>
+
+                <h3>與其他工具的差異化優勢</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>Windsurf</th>
+                            <th>Cursor</th>
+                            <th>Copilot</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>意圖預測</strong></td>
+                            <td><span class="feature-check">✓</span> Supercomplete</td>
+                            <td>基本補全</td>
+                            <td>基本補全</td>
+                        </tr>
+                        <tr>
+                            <td><strong>即時預覽</strong></td>
+                            <td><span class="feature-check">✓</span> 內建</td>
+                            <td>需外掛</td>
+                            <td>需外掛</td>
+                        </tr>
+                        <tr>
+                            <td><strong>一鍵回滾</strong></td>
+                            <td><span class="feature-check">✓</span> 原生支援</td>
+                            <td>部分支援</td>
+                            <td><span class="feature-cross">✗</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>習慣記憶</strong></td>
+                            <td><span class="feature-check">✓</span> Memory</td>
+                            <td><span class="feature-cross">✗</span></td>
+                            <td><span class="feature-cross">✗</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="box warning">
+                    <strong>注意事項</strong><br>
+                    Windsurf 是較新的產品，某些功能仍在持續優化中。官方網站：windsurf.com/editor
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Windsurf Flow Mode - 自然對話編程 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windsurf Flow Mode：自然對話編程</h2>
+
+                <h3>什麼是 Flow Mode？</h3>
+                <div class="box info">
+                    <strong>Flow Mode 的核心理念</strong><br>
+                    打破人與 AI 的對話邊界。不是一句一句指令，而是自然對話式的合作。你說一個大方向，AI 會自動處理細節，邊處理邊向你報告進度。
+                </div>
+
+                <h3>Flow Mode vs 傳統 Chat 的區別</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>方面</th>
+                            <th>Flow Mode</th>
+                            <th>傳統 Chat（Cursor/Copilot）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>交互方式</strong></td>
+                            <td>持續對話，實時修改</td>
+                            <td>發送指令，等待回應</td>
+                        </tr>
+                        <tr>
+                            <td><strong>代碼修改</strong></td>
+                            <td>AI 主動修改，自動同步</td>
+                            <td>生成代碼片段，手動複製</td>
+                        </tr>
+                        <tr>
+                            <td><strong>上下文理解</strong></td>
+                            <td>自動理解整個流程</td>
+                            <td>需要明確指定相關文件</td>
+                        </tr>
+                        <tr>
+                            <td><strong>錯誤恢復</strong></td>
+                            <td>AI 自動檢測和修復</td>
+                            <td>需要手動指出錯誤</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Flow Mode 實例對話</h3>
+                <div class="box tip">
+                    <strong>場景：建立用戶認證系統</strong><br><br>
+                    你："我要加一個登入系統，用 JWT。"<br>
+                    Windsurf："好，我會：<br>
+                    1. 在後端加 JWT 驗證邏輯<br>
+                    2. 修改數據庫模型加密碼欄位<br>
+                    3. 前端加登入頁面<br>
+                    4. 加上錯誤處理"<br>
+                    （Windsurf 自動同時修改所有文件）<br><br>
+                    你："再加一個記住我功能"<br>
+                    Windsurf："已添加，更新了 token 刷新邏輯"<br><br>
+                    （無需你指定哪些文件要改，AI 全部自動協調）
+                </div>
+
+                <h3>啟用 Flow Mode</h3>
+                <ol>
+                    <li>在 Windsurf 中打開 Chat 面板</li>
+                    <li>點擊 "Flow Mode" 按鈕（左上角）</li>
+                    <li>開始自然對話</li>
+                </ol>
+
+                <h3>Flow Mode 的最佳實踐</h3>
+                <ul>
+                    <li>描述"做什麼"而不是"怎麼做"</li>
+                    <li>讓 AI 自主決定實現方式</li>
+                    <li>邊走邊提出新需求，AI 會自動適應</li>
+                    <li>信任 AI 的決定，除非明確需要改進</li>
+                    <li>定期審視生成的代碼品質</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 15: Windsurf 實作專案範例 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Windsurf 實作專案範例</h2>
+
+                <div class="box info">
+                    <strong>用 Windsurf 快速完成三種不同類型的專案</strong><br>
+                    以下展示如何使用 Windsurf 的 Cascade 與 Flow Mode 快速開發完整應用。
+                </div>
+
+                <h3>三大實作專案總覽</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>專案名稱</th>
+                            <th>使用技術</th>
+                            <th>核心功能</th>
+                            <th>難度</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>記憶翻牌遊戲</strong></td>
+                            <td>HTML + CSS + JavaScript</td>
+                            <td>卡片配對、計時器、計分系統</td>
+                            <td>入門</td>
+                        </tr>
+                        <tr>
+                            <td><strong>線上訂餐系統</strong></td>
+                            <td>HTML + CSS + JavaScript</td>
+                            <td>菜單瀏覽、購物車、結帳流程</td>
+                            <td>中等</td>
+                        </tr>
+                        <tr>
+                            <td><strong>個人履歷網站</strong></td>
+                            <td>HTML + CSS</td>
+                            <td>響應式設計、動畫效果、作品集</td>
+                            <td>入門</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>專案 1：記憶翻牌遊戲</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>提示詞範例</h4>
+                        <div class="code-block" style="font-size: 13px;">"建立一個記憶翻牌遊戲：
+- 4x4 的卡片網格（8 對圖案）
+- 點擊翻牌，配對成功保持翻開
+- 計時器和翻牌次數統計
+- 遊戲結束顯示成績
+- 重新開始按鈕"</div>
+                    </div>
+                    <div>
+                        <h4>Windsurf 自動完成</h4>
+                        <p>✓ 卡片隨機排列邏輯<br>
+                        ✓ 翻牌動畫效果<br>
+                        ✓ 配對檢測機制<br>
+                        ✓ 計時與計分系統<br>
+                        ✓ 響應式卡片佈局</p>
+                    </div>
+                </div>
+
+                <h3>專案 2：線上訂餐系統</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>提示詞範例</h4>
+                        <div class="code-block" style="font-size: 13px;">"建立線上訂餐系統：
+- 餐點分類與菜單展示
+- 加入購物車功能
+- 數量增減與小計計算
+- 結帳頁面（姓名、電話、地址）
+- 訂單確認頁面"</div>
+                    </div>
+                    <div>
+                        <h4>Windsurf 自動完成</h4>
+                        <p>✓ 菜單資料結構設計<br>
+                        ✓ 購物車狀態管理<br>
+                        ✓ 金額自動計算<br>
+                        ✓ 表單驗證邏輯<br>
+                        ✓ 完整 UI 介面</p>
+                    </div>
+                </div>
+
+                <h3>專案 3：個人履歷網站</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>提示詞範例</h4>
+                        <div class="code-block" style="font-size: 13px;">"建立個人履歷網站：
+- 首頁 Hero 區塊（大頭照、簡介）
+- 關於我、技能、經歷區塊
+- 作品集展示（含圖片）
+- 聯絡表單
+- RWD 響應式設計
+- 滾動動畫效果"</div>
+                    </div>
+                    <div>
+                        <h4>Windsurf 自動完成</h4>
+                        <p>✓ 現代化版面設計<br>
+                        ✓ CSS 動畫與過渡效果<br>
+                        ✓ 響應式斷點設定<br>
+                        ✓ 作品集 Lightbox<br>
+                        ✓ 社群連結整合</p>
+                    </div>
+                </div>
+
+                <div class="box tip">
+                    <strong>開發技巧</strong><br>
+                    使用 Windsurf 開發時，先描述整體架構，讓 AI 生成基礎框架，再透過對話逐步調整細節。善用 Live Preview 即時查看效果，不滿意可用 Rollback 一鍵回滾。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Antigravity 簡介 - Google 雲端 IDE -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Antigravity 簡介：Google 雲端 IDE</h2>
+
+                <div class="box success">
+                    <strong>Antigravity 是什麼？</strong><br>
+                    Google 推出的完全雲端 AI 程式設計環境（Project IDX 升級版）。無需本地配置，直接在瀏覽器中開發、測試、部署。內建 AI 助手，支援多種框架。
+                </div>
+
+                <h3>Antigravity 的獨特優勢</h3>
+                <div class="three-column">
+                    <div class="concept-card">
+                        <h4>完全雲端</h4>
+                        <p>無需配置環境，打開瀏覽器即用</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>AI Agent Mode</h4>
+                        <p>AI 自動執行任務，無需手動干預</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>自動測試</h4>
+                        <p>邊寫邊測，問題立即反饋</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>一鍵部署</h4>
+                        <p>直接部署到 Netlify、Firebase</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>團隊協作</h4>
+                        <p>分享連結即可多人同步編輯</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>Google 生態</h4>
+                        <p>與 Google Cloud、Firebase 無縫整合</p>
+                    </div>
+                </div>
+
+                <h3>Antigravity vs Cursor/Windsurf</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>Cursor / Windsurf</h4>
+                        <p>• 本地 IDE<br>
+                        • 需要配置環境<br>
+                        • 完全離線工作<br>
+                        • 代碼在你的電腦</p>
+                    </div>
+                    <div>
+                        <h4>Antigravity</h4>
+                        <p>• 雲端 IDE<br>
+                        • 零配置，即開即用<br>
+                        • 需要網絡連接<br>
+                        • 代碼在 Google Cloud</p>
+                    </div>
+                </div>
+
+                <h3>適用場景</h3>
+                <ul>
+                    <li><strong>快速原型</strong>：5 分鐘創建完整應用</li>
+                    <li><strong>無設備限制</strong>：平板、Chromebook、舊電腦都能用</li>
+                    <li><strong>團隊協作</strong>：即時共享代碼，一起編程</li>
+                    <li><strong>自動化任務</strong>：用 AI Agent 自動完成重複工作</li>
+                    <li><strong>學習環境</strong>：初學者無需複雜配置</li>
+                </ul>
+
+                <div class="box warning">
+                    <strong>注意事項</strong><br>
+                    Antigravity 需要 Google 帳號和網絡連接。如果你注重隱私或經常離線，本地 IDE（Cursor/Windsurf）更合適。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 18: Antigravity 開始使用與快捷鍵 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Antigravity 開始使用與快捷鍵</h2>
+
+                <h3>開始使用</h3>
+                <ol>
+                    <li><strong>訪問官網</strong>：https://antigravity.google</li>
+                    <li><strong>使用 Google 帳號登入</strong>：直接用現有 Google 帳號即可</li>
+                    <li><strong>建立新專案</strong>：選擇「New Project」開始新專案</li>
+                    <li><strong>選擇專案模板</strong>：可選擇 React、Vue、Angular、Flutter 等框架模板</li>
+                    <li><strong>開始編碼</strong>：進入雲端編輯環境，直接開始開發</li>
+                </ol>
+
+                <div class="box success">
+                    <strong>零配置的優勢</strong><br>
+                    Antigravity 是完全雲端的 IDE，無需下載安裝任何軟體。只要有瀏覽器和網路連線，任何裝置都能使用，包括 Chromebook、平板電腦、甚至舊電腦。
+                </div>
+
+                <h3>桌面應用（可選）</h3>
+                <p>若需要更接近本地 IDE 的體驗，可下載桌面版：</p>
+                <ul>
+                    <li><strong>下載網址</strong>：https://antigravity.google/download</li>
+                    <li><strong>支援系統</strong>：Windows、macOS、Linux</li>
+                    <li><strong>優勢</strong>：更快的啟動速度、離線編輯（需同步）、系統整合更佳</li>
+                </ul>
+
+                <h3>常用快捷鍵</h3>
+                <div class="code-block">Cmd/Ctrl + `     → 開啟/關閉終端機
+Cmd/Ctrl + L     → 開啟 AI Agent 面板
+Cmd/Ctrl + E     → 切換 Editor/Manager 視圖
+Cmd/Ctrl + I     → 開啟指令面板
+Cmd/Ctrl + P     → 快速開啟檔案
+Cmd/Ctrl + S     → 儲存並自動同步</div>
+
+                <h3>AI 功能快捷鍵</h3>
+                <div class="code-block">【程式碼生成】
+Cmd/Ctrl + Shift + G → 生成測試
+Cmd/Ctrl + Shift + D → 生成文檔
+Cmd/Ctrl + Shift + R → 重構選中代碼
+
+【協作功能】
+Cmd/Ctrl + Shift + S → 分享專案
+Cmd/Ctrl + Shift + C → 開啟協作模式
+Cmd/Ctrl + Shift + P → 發佈/部署</div>
+
+                <h3>介面說明</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>區域</th>
+                            <th>功能說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>左側面板</strong></td>
+                            <td>檔案瀏覽器、搜尋、版本控制</td>
+                        </tr>
+                        <tr>
+                            <td><strong>中央區域</strong></td>
+                            <td>程式碼編輯器（支援多分頁）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>右側面板</strong></td>
+                            <td>AI Agent 對話、即時預覽</td>
+                        </tr>
+                        <tr>
+                            <td><strong>底部面板</strong></td>
+                            <td>終端機、輸出、問題列表</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="box tip">
+                    <strong>小技巧</strong><br>
+                    第一次使用建議先從範本專案開始，熟悉介面後再建立空白專案。Antigravity 的 AI Agent 面板（Cmd/Ctrl + L）是最強大的功能，可以用自然語言描述需求，AI 會自動完成任務。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19: Antigravity Agent Mode - AI 自動開發 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Antigravity Agent Mode：AI 自動開發</h2>
+
+                <h3>Agent Mode 的革命性意義</h3>
+                <div class="box success">
+                    <strong>從"我寫代碼"到"AI 寫代碼"</strong><br>
+                    傳統開發：開發者逐行編寫<br>
+                    協作編程：開發者與 AI 對話，AI 幫忙補全<br>
+                    Agent Mode：你設定目標，AI 自動完成所有工作，包括編寫、測試、修復 Bug
+                </div>
+
+                <h3>Agent Mode 的工作流</h3>
+                <ol>
+                    <li><strong>設定目標</strong>："建立一個天氣查詢應用"</li>
+                    <li><strong>指定需求</strong>：使用 React、API 源、設計要求等</li>
+                    <li><strong>啟動 Agent</strong>：點擊"Run Agent"按鈕</li>
+                    <li><strong>AI 自動執行</strong>：
+                        <ul>
+                            <li>創建項目結構</li>
+                            <li>安裝依賴</li>
+                            <li>生成所有代碼</li>
+                            <li>運行測試</li>
+                            <li>修復問題</li>
+                        </ul>
+                    </li>
+                    <li><strong>審查結果</strong>：檢查 AI 的成果，需要改進時修正</li>
+                </ol>
+
+                <h3>Agent Mode 實例</h3>
+                <div class="box info">
+                    <strong>目標：</strong>"用 Claude API 做一個聊天機器人"<br><br>
+                    <strong>Agent 的自動任務清單：</strong><br>
+                    ✓ 初始化 Node.js 項目<br>
+                    ✓ 安裝 claude-sdk<br>
+                    ✓ 生成主程序代碼<br>
+                    ✓ 配置 API Key<br>
+                    ✓ 創建測試用例<br>
+                    ✓ 運行測試<br>
+                    ✓ 發現問題 → 自動修復<br>
+                    ✓ 完成！（5 分鐘內）<br><br>
+                    傳統方式需要 1-2 小時
+                </div>
+
+                <h3>Agent Mode vs Manual Mode</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>Agent Mode</th>
+                            <th>Manual Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>開發速度</strong></td>
+                            <td>最快（自動化一切）</td>
+                            <td>較慢（需要手動指導）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>控制力</strong></td>
+                            <td>低（AI 主導）</td>
+                            <td>高（開發者主導）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>學習效果</strong></td>
+                            <td>較差（看不到過程）</td>
+                            <td>較好（逐步理解）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>適用場景</strong></td>
+                            <td>快速原型、重複任務</td>
+                            <td>學習、精細化開發</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>何時使用 Agent Mode？</h3>
+                <ul>
+                    <li>你很明確知道要什麼，不需要邊走邊改</li>
+                    <li>這是一個重複性的、標準化的項目</li>
+                    <li>時間緊張，需要快速完成</li>
+                    <li>你已經熟悉開發流程，只是想加快速度</li>
+                </ul>
+
+                <h3>何時不用 Agent Mode？</h3>
+                <ul>
+                    <li>你在學習編程，需要理解每個步驟</li>
+                    <li>這是複雜的商業邏輯，需要精細控制</li>
+                    <li>需要多次迭代和調整</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 18: Antigravity 瀏覽器整合與自動測試 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Antigravity 瀏覽器整合與自動測試</h2>
+
+                <h3>內建瀏覽器預覽</h3>
+                <div class="box success">
+                    <strong>邊寫邊看效果</strong><br>
+                    Antigravity 的左側是代碼編輯器，右側是即時預覽瀏覽器。修改代碼時自動刷新，看到變化。無需在多個窗口之間切換。
+                </div>
+
+                <h3>自動測試系統</h3>
+                <ol>
+                    <li><strong>智能測試建議</strong>：Antigravity 會根據你的代碼自動建議測試用例</li>
+                    <li><strong>一鍵運行</strong>：點擊"Run Tests"，自動執行所有測試</li>
+                    <li><strong>實時反饋</strong>：測試結果即時顯示，包括覆蓋率、錯誤位置</li>
+                    <li><strong>自動修復</strong>：如果測試失敗，AI 會建議修復方案</li>
+                </ol>
+
+                <h3>測試工作流示例</h3>
+                <div class="code-block">1. 你寫了一個計算函數：
+   function add(a, b) { return a + b; }
+
+2. Antigravity 自動建議測試：
+   • add(1, 2) 應返回 3
+   • add(-1, 1) 應返回 0
+   • add(0, 0) 應返回 0
+
+3. 你批准測試 → 自動運行
+
+4. 所有測試通過 ✓
+
+5. Antigravity 提示："代碼覆蓋率 100%"</div>
+
+                <h3>除錯功能</h3>
+                <ul>
+                    <li><strong>即時堆棧追蹤</strong>：錯誤發生時立即顯示調用堆棧</li>
+                    <li><strong>變數檢查</strong>：暫停執行時查看所有變數值</li>
+                    <li><strong>條件斷點</strong>：設定斷點的觸發條件</li>
+                    <li><strong>AI 自動除錯</strong>：AI 分析錯誤並建議修復</li>
+                </ul>
+
+                <h3>實時協作測試</h3>
+                <div class="box info">
+                    <strong>團隊開發場景</strong><br>
+                    • 分享 Antigravity 連結<br>
+                    • 多人同時編輯和測試<br>
+                    • 所有測試結果實時同步<br>
+                    • 一人修改代碼，所有人即時看到效果
+                </div>
+
+                <h3>性能分析</h3>
+                <ul>
+                    <li>內建性能分析工具</li>
+                    <li>實時監控 CPU、記憶體、執行時間</li>
+                    <li>AI 建議優化方案</li>
+                </ul>
+
+                <div class="box warning">
+                    <strong>提示</strong><br>
+                    Antigravity 的自動測試功能非常強大，但可能無法覆蓋所有邊界情況。重要的代碼還需要手動測試驗證。
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19: Antigravity 部署到 Netlify 實戰 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Antigravity 部署到 Netlify 實戰</h2>
+
+                <h3>為什麼選擇 Netlify？</h3>
+                <ul>
+                    <li>免費，支援自動部署</li>
+                    <li>無需設定伺服器，自動 HTTPS</li>
+                    <li>與 GitHub 深度整合</li>
+                    <li>自動回滾和版本管理</li>
+                    <li>全球 CDN，訪問速度快</li>
+                </ul>
+
+                <h3>部署步驟（非常簡單）</h3>
+                <h4>Step 1：在 Antigravity 中完成開發</h4>
+                <p>確保代碼能正常運行，所有測試通過。</p>
+
+                <h4>Step 2：推送到 GitHub</h4>
+                <div class="code-block">1. 在 Antigravity 右上角點擊 "Push to GitHub"
+2. 授權 Antigravity 訪問你的 GitHub
+3. 選擇倉庫或創建新倉庫
+4. 點擊 Confirm</div>
+
+                <h4>Step 3：在 Netlify 連接</h4>
+                <ol>
+                    <li>訪問 https://netlify.com</li>
+                    <li>用 GitHub 帳號登入</li>
+                    <li>點擊 "New site from Git"</li>
+                    <li>選擇你剛推送的倉庫</li>
+                    <li>設定構建命令和輸出文件夾</li>
+                </ol>
+
+                <h4>Step 4：自動部署</h4>
+                <div class="box success">
+                    <strong>完成！</strong><br>
+                    Netlify 會自動：<br>
+                    ✓ 監聽 GitHub 更新<br>
+                    ✓ 每次 Push 時自動部署<br>
+                    ✓ 生成唯一 URL（https://xxx.netlify.app）<br>
+                    ✓ 配置 HTTPS 證書<br>
+                    ✓ 設定自動備份
+                </div>
+
+                <h3>部署配置範例</h3>
+                <div class="code-block">（Netlify 自動檢測）
+
+React 項目：
+- Build command: npm run build
+- Publish directory: build
+
+Next.js 項目：
+- Build command: npm run build
+- Publish directory: .next
+
+Vue 項目：
+- Build command: npm run build
+- Publish directory: dist</div>
+
+                <h3>部署後的管理</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>自定義域名</strong></td>
+                            <td>綁定自己的域名</td>
+                        </tr>
+                        <tr>
+                            <td><strong>環境變數</strong></td>
+                            <td>安全設定 API Key、數據庫連接</td>
+                        </tr>
+                        <tr>
+                            <td><strong>版本管理</strong></td>
+                            <td>回滾到之前的部署版本</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Webhook</strong></td>
+                            <td>與第三方服務整合</td>
+                        </tr>
+                        <tr>
+                            <td><strong>分析</strong></td>
+                            <td>查看訪問量、性能指標</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>實戰建議</h3>
+                <ul>
+                    <li>第一次部署可能需要 5-10 分鐘，之後每次更新只需 1-2 分鐘</li>
+                    <li>如果部署失敗，檢查 Netlify Build 日誌找出問題</li>
+                    <li>環境變數要在 Netlify Dashboard 中設定，不要硬寫在代碼裡</li>
+                    <li>定期檢查依賴更新，保持安全性</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 20: Part 2 總結與工具對比 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Part 2 總結與工具對比表</h2>
+
+                <h3>四大工具總體對比</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>維度</th>
+                            <th>Cursor IDE</th>
+                            <th>GitHub Copilot</th>
+                            <th>Windsurf</th>
+                            <th>Antigravity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>類型</strong></td>
+                            <td>本地 IDE</td>
+                            <td>IDE 擴展</td>
+                            <td>本地 IDE</td>
+                            <td>雲端 IDE</td>
+                        </tr>
+                        <tr>
+                            <td><strong>上手難度</strong></td>
+                            <td>簡單</td>
+                            <td>最簡單</td>
+                            <td>中等</td>
+                            <td>簡單</td>
+                        </tr>
+                        <tr>
+                            <td><strong>代碼生成速度</strong></td>
+                            <td>快</td>
+                            <td>最快</td>
+                            <td>很快</td>
+                            <td>快</td>
+                        </tr>
+                        <tr>
+                            <td><strong>理解能力</strong></td>
+                            <td>很強</td>
+                            <td>強</td>
+                            <td>最強</td>
+                            <td>很強</td>
+                        </tr>
+                        <tr>
+                            <td><strong>團隊協作</strong></td>
+                            <td>不支援</td>
+                            <td>支援</td>
+                            <td>支援</td>
+                            <td>實時協作</td>
+                        </tr>
+                        <tr>
+                            <td><strong>離線工作</strong></td>
+                            <td>支援</td>
+                            <td>支援</td>
+                            <td>支援</td>
+                            <td>需要網絡</td>
+                        </tr>
+                        <tr>
+                            <td><strong>配置環境</strong></td>
+                            <td>需要</td>
+                            <td>需要</td>
+                            <td>需要</td>
+                            <td>無需</td>
+                        </tr>
+                        <tr>
+                            <td><strong>自動化程度</strong></td>
+                            <td>中</td>
+                            <td>中</td>
+                            <td>高</td>
+                            <td>最高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>成本</strong></td>
+                            <td>$20/月</td>
+                            <td>$10-19/月</td>
+                            <td>免費/付費</td>
+                            <td>免費/付費</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>工具選擇決策樹</h3>
+                <div class="box info">
+                    <strong>1. 我優先考慮什麼？</strong><br>
+                    • 最快上手 → GitHub Copilot 或 Antigravity<br>
+                    • 最高品質 → Windsurf 或 Cursor<br>
+                    • 無配置即用 → Antigravity<br>
+                    • 離線工作 → Cursor 或 Windsurf<br><br>
+                    <strong>2. 開發場景</strong><br>
+                    • 個人快速原型 → Cursor<br>
+                    • 團隊協作開發 → GitHub Copilot + Windsurf<br>
+                    • 雲端協作 → Antigravity<br>
+                    • 大型項目重構 → Windsurf<br><br>
+                    <strong>3. 環境限制</strong><br>
+                    • 老舊電腦/平板 → Antigravity<br>
+                    • 企業安全要求 → GitHub Copilot (Copilot Business)<br>
+                    • 個人用戶 → Cursor 或 Windsurf
+                </div>
+
+                <h3>Part 2 核心收穫</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>1. AI 協作編程是未來</h4>
+                        <p>傳統手寫代碼效率已是極限，AI 能將開發效率提升 5-10 倍</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>2. 工具選擇很重要</h4>
+                        <p>不同工具適應不同場景，沒有絕對最好，只有最合適</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>3. 掌握提示詞很關鍵</h4>
+                        <p>好的提示能大幅提升 AI 生成代碼的品質和效率</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>4. 人仍是核心</h4>
+                        <p>AI 是助手，設計、邏輯、決策仍需要人類思考</p>
+                    </div>
+                </div>
+
+                <h3>下一步：Part 3 前端生成</h3>
+                <p style="text-align: center; margin-top: 35px; color: #666; font-size: 18px;">
+                    我們掌握了如何在 IDE 中與 AI 協作。<br>
+                    下一步，學習如何用 AI 快速生成美觀的前端界面。
+                </p>
+
+                <div class="btn-container">
+                    <a href="Part3_無程式碼前端生成.html" class="next-part-btn">
+                        ➜ 進入 Part 3：無程式碼前端生成
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="nav-arrow prev-arrow" id="prevBtn" onclick="changeSlide(-1)">❮</button>
+    <button class="nav-arrow next-arrow" id="nextBtn" onclick="changeSlide(1)">❯</button>
+    <div class="indicators" id="indicatorContainer"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function init() {
+            createIndicators();
+            showSlide(0);
+            updateButtons();
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        }
+
+        function createIndicators() {
+            const container = document.getElementById('indicatorContainer');
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.onclick = () => goToSlide(index);
+                container.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            currentSlide = index;
+            document.querySelectorAll('.dot').forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === index);
+            });
+            updateButtons();
+            document.getElementById('currentPage').textContent = currentSlide + 1;
+            const activeCard = slides[index].querySelector('.content-card');
+            if (activeCard) activeCard.scrollTop = 0;
+        }
+
+        function changeSlide(direction) { showSlide(currentSlide + direction); }
+        function goToSlide(index) { showSlide(index); }
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

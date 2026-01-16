@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Part 6: 無程式碼前端生成 - VibeCoding 氣圍編碼</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-buttons { display: flex; gap: 12px; }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.25);
+            color: white;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .prev-arrow { left: 30px; }
+        .next-arrow { right: 30px; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            padding-top: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            top: 60px; left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            z-index: 20;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        h1 { color: #667eea; font-size: 52px; margin-bottom: 20px; text-align: center; font-weight: 800; }
+        h2 { color: #764ba2; font-size: 36px; margin-bottom: 25px; border-bottom: 3px solid #667eea; padding-bottom: 12px; font-weight: 700; }
+        h3 { color: #667eea; font-size: 24px; margin: 20px 0 12px 0; font-weight: 600; }
+        h4 { color: #555; font-size: 20px; margin: 15px 0 10px 0; font-weight: 600; }
+        p, li { font-size: 18px; line-height: 1.7; color: #444; margin-bottom: 12px; }
+
+        code {
+            background: #f0f2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 4px solid #667eea;
+        }
+
+        .box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+        .info { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+        .warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success { background: #d4edda; border-color: #28a745; color: #155724; }
+
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #004d40;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .concept-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .concept-card h3, .concept-card h4 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .concept-card p {
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 0;
+            font-size: 16px;
+        }
+
+        ul, ol { margin-left: 25px; margin-bottom: 18px; }
+        li { margin-bottom: 10px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover { background: rgba(102, 126, 234, 0.05); }
+
+        .indicators {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 4000;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active { background: #84fab0; transform: scale(1.3); }
+        .dot:hover { background: rgba(255,255,255,0.7); transform: scale(1.2); }
+
+        .part-cover {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+
+        .part-number {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .part-title {
+            font-size: 48px;
+            color: #667eea;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .part-description {
+            color: #666;
+            font-size: 26px;
+            font-weight: normal;
+            max-width: 900px;
+            margin-top: 20px;
+        }
+
+        .part-tags {
+            margin-top: 35px;
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .comparison-table {
+            margin-top: 30px;
+            font-size: 15px;
+        }
+
+        .comparison-table th {
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .step-box {
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .prompt-box {
+            background: #f5f5f5;
+            border: 2px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .feature-list li {
+            padding-left: 30px;
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .button-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .button-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 1024px) {
+            .two-column { grid-template-columns: 1fr; }
+            .content-card { padding: 30px; }
+            h1 { font-size: 36px; }
+            h2 { font-size: 28px; }
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            color: rgba(0,0,0,0.4);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .content-card::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .content-card::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .content-card::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+        }
+
+        .content-card::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-title">Part 6: 無程式碼前端生成 | 頁碼: <span id="currentPage">1</span> / 11</div>
+        <div class="nav-buttons">
+            <a href="Part5_Antigravity.html" class="nav-btn">← Part 5</a>
+            <a href="Part7_全端應用生成.html" class="nav-btn">Part 7 →</a>
+            <button class="nav-btn" onclick="toggleFullscreen()">全螢幕</button>
+        </div>
+    </nav>
+
+    <div class="slide-container">
+        <!-- 投影片 1: Part 3 封面 -->
+        <div class="slide active">
+            <div class="content-card">
+                <div class="part-cover">
+                    <div class="part-number">Part 6</div>
+                    <div class="part-title">無程式碼前端生成</div>
+                    <div class="part-description">
+                        使用 AI 工具快速生成專業前端界面<br>
+                        無需編寫代碼，輕鬆建立互動式應用程式
+                    </div>
+                    <div class="part-tags">
+                        <span class="tag">Gemini Canvas</span>
+                        <span class="tag">v0.dev</span>
+                        <span class="tag">AI Studio</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 2: 無程式碼前端開發概述 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>無程式碼前端開發概述</h2>
+                <h3>什麼是無程式碼前端生成？</h3>
+                <p>無程式碼前端生成是利用 AI 和可視化工具，透過自然語言描述或視覺設計，自動生成高品質的前端代碼。</p>
+
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>快速原型開發</h4>
+                        <p>在數分鐘內將想法轉換為可交互的原型</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>降低技術門檻</h4>
+                        <p>非程序員也能創建專業的 Web 應用</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>提高開發效率</h4>
+                        <p>開發人員可以專注於業務邏輯而非界面</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>AI 驅動迭代</h4>
+                        <p>實時反饋和持續改進設計</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 35px;">核心優勢</h3>
+                <ul class="feature-list">
+                    <li>自動化設計系統應用</li>
+                    <li>響應式設計自動適配</li>
+                    <li>支持實時預覽和修改</li>
+                    <li>生成生產級別的代碼</li>
+                    <li>集成多種 API 和數據源</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 投影片 3: Gemini Canvas 簡介 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Gemini Canvas 簡介</h2>
+                <h3>什麼是 Gemini Canvas？</h3>
+                <p>Gemini Canvas 是 Google 推出的 AI 驅動的前端代碼生成工具，集成於 Gemini 聊天界面中。透過自然語言對話，自動生成完整的 HTML/CSS/JavaScript 代碼。</p>
+
+                <div class="box info">
+                    <strong>重點特性：</strong>
+                    <ul>
+                        <li>支持實時互動預覽</li>
+                        <li>迭代式改進設計</li>
+                        <li>生成完全獨立的應用程式</li>
+                        <li>無需任何編程知識</li>
+                        <li>支持複雜的互動邏輯</li>
+                    </ul>
+                </div>
+
+                <h3>適用場景</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>快速實現的項目</h4>
+                        <ul>
+                            <li>事件報名表單</li>
+                            <li>數據可視化儀表板</li>
+                            <li>計算工具</li>
+                            <li>遊戲原型</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>教學和學習</h4>
+                        <ul>
+                            <li>Web 開發入門</li>
+                            <li>UI/UX 設計展示</li>
+                            <li>概念驗證</li>
+                            <li>學生項目</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 4: 啟動 Canvas - 對話式開發 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>啟動 Canvas - 對話式開發</h2>
+
+                <h3>如何進入 Canvas 模式</h3>
+                <div class="step-box">
+                    <strong>步驟 1：</strong> 訪問 <code>gemini.google.com</code>
+                </div>
+                <div class="step-box">
+                    <strong>步驟 2：</strong> 在聊天框輸入開發需求
+                </div>
+                <div class="step-box">
+                    <strong>步驟 3：</strong> Gemini 自動打開 Canvas 窗口
+                </div>
+                <div class="step-box">
+                    <strong>步驟 4：</strong> 實時查看應用程式預覽
+                </div>
+
+                <h3>觸發 Canvas 的關鍵詞</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>建立應用</h4>
+                        <p>"建立一個..."<br>"設計一個..."<br>"製作一個..."</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>修改界面</h4>
+                        <p>"改變顏色..."<br>"添加功能..."<br>"優化布局..."</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>代碼改進</h4>
+                        <p>"使用更好的..."<br>"改進代碼..."<br>"優化性能..."</p>
+                    </div>
+                </div>
+
+                <h3>有效的 Prompt 技巧</h3>
+                <ul>
+                    <li>描述具體的視覺效果而非技術細節</li>
+                    <li>提供用戶角色和使用場景</li>
+                    <li>指定顏色、字體等設計細節</li>
+                    <li>明確功能需求和交互方式</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 投影片 5: 實作案例 1 - 活動費用計算器 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作案例 1：活動費用計算器</h2>
+
+                <h3>需求描述</h3>
+                <p>建立一個活動費用計算器，用於計算多人活動的費用分攤。</p>
+
+                <h3>推薦 Prompt</h3>
+                <div class="prompt-box">
+創建一個活動費用計算器應用，具有以下功能：
+- 輸入活動總費用
+- 輸入參與人數
+- 計算每人平均費用
+- 顯示費用詳細分析
+- 支持小費計算（10%、15%、20%）
+- 美觀的卡片式布局
+- 使用紫色和藍色漸變主題
+                </div>
+
+                <h3>預期功能</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>基礎功能</h4>
+                        <ul class="feature-list">
+                            <li>費用輸入和計算</li>
+                            <li>即時更新結果</li>
+                            <li>費用分配顯示</li>
+                            <li>清除數據按鈕</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>進階功能</h4>
+                        <ul class="feature-list">
+                            <li>小費百分比選擇</li>
+                            <li>匯率轉換</li>
+                            <li>費用歷史記錄</li>
+                            <li>打印或導出功能</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>迭代改進 Prompt</h3>
+                <div class="prompt-box">
+添加一個「不均勻分配」功能，讓用戶可以為不同的人設置不同的費用比例。
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 6: 實作案例 2 - BMI 健康追蹤器 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作案例 2：BMI 健康追蹤器</h2>
+
+                <h3>需求描述</h3>
+                <p>開發一個 BMI（身體質量指數）計算和健康追蹤應用，幫助用戶監測健康狀況。</p>
+
+                <h3>推薦 Prompt</h3>
+                <div class="prompt-box">
+建立一個 BMI 健康追蹤器應用：
+- 輸入身高（cm）和體重（kg）
+- 自動計算 BMI 值
+- 顯示健康狀態分類（過輕、正常、超重、肥胖）
+- 使用顏色代碼表示健康狀態
+- 提供健康建議
+- 支持記錄歷史數據
+- 展示進度圖表
+                </div>
+
+                <h3>關鍵實現細節</h3>
+                <ul>
+                    <li><strong>BMI 計算公式：</strong> BMI = 體重(kg) / (身高(m))²</li>
+                    <li><strong>分類標準：</strong> 過輕(&lt;18.5) | 正常(18.5-24.9) | 超重(25-29.9) | 肥胖(≥30)</li>
+                    <li><strong>動態反饋：</strong> 根據 BMI 值實時改變顏色和建議</li>
+                    <li><strong>數據持久化：</strong> 使用 localStorage 保存追蹤數據</li>
+                </ul>
+
+                <h3>增強功能請求</h3>
+                <div class="prompt-box">
+添加一個圖表功能，顯示過去 30 天的 BMI 變化趨勢。還要包括每日卡路里消耗建議。
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 7: 實作案例 3 - 氣象觀測儀表板 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作案例 3：氣象觀測儀表板</h2>
+
+                <h3>需求描述</h3>
+                <p>整合 OpenWeather API 的實時天氣應用程式，展示當前和預測天氣數據。</p>
+
+                <h3>推薦 Prompt</h3>
+                <div class="prompt-box">
+建立一個天氣應用程式：
+- 搜索功能（輸入城市名稱）
+- 顯示當前天氣（溫度、濕度、風速）
+- 5 天天氣預報
+- 天氣圖標視覺展示
+- 使用 OpenWeather API（免費版本）
+- 響應式設計
+- 深色主題，動畫過渡效果
+                </div>
+
+                <h3>API 集成步驟</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>1. 獲取 API 密鑰</h4>
+                        <p>訪問 openweathermap.org 註冊並獲取免費 API 密鑰</p>
+                    </div>
+                    <div>
+                        <h4>2. 使用 API 端點</h4>
+                        <div class="code-block">
+https://api.openweathermap.org/data/2.5/weather?q={city}&appid={key}&units=metric
+                        </div>
+                    </div>
+                </div>
+
+                <h3>數據驗證和錯誤處理</h3>
+                <div class="box warning">
+                    <strong>重要：</strong> 在 Canvas 中請求時告知 AI 需要包含錯誤處理（如城市不存在、API 調用失敗等）
+                </div>
+
+                <h3>進階版本 Prompt</h3>
+                <div class="prompt-box">
+添加「多城市對比」功能，允許用戶同時查看多個城市的天氣，並使用圖表比較溫度差異。
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 8: 實作案例 4 - Space Invaders 遊戲 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作案例 4：Space Invaders 遊戲</h2>
+
+                <h3>需求描述</h3>
+                <p>開發一個經典的 Space Invaders 遊戲，展示 Canvas 生成複雜互動邏輯的能力。</p>
+
+                <h3>推薦 Prompt</h3>
+                <div class="prompt-box">
+創建一個 Space Invaders 風格的遊戲：
+- 玩家控制一艘船（使用箭頭鍵或滑鼠）
+- 自動生成敵人飛船並向下移動
+- 玩家可以射擊摧毀敵人
+- 計分系統
+- 生命值系統
+- 難度遞增
+- 遊戲結束和重新開始功能
+- 使用鮮豔的顏色和動畫效果
+                </div>
+
+                <h3>遊戲機制實現</h3>
+                <ul>
+                    <li><strong>碰撞檢測：</strong> 檢查敵人、子彈、玩家之間的碰撞</li>
+                    <li><strong>分數系統：</strong> 摧毀敵人加分，被敵人擊中扣分</li>
+                    <li><strong>難度遞增：</strong> 隨著分數增加，敵人速度和數量增加</li>
+                    <li><strong>動畫循環：</strong> 使用 requestAnimationFrame 實現流暢動畫</li>
+                </ul>
+
+                <h3>逐步優化 Prompt</h3>
+                <div class="prompt-box">
+改進遊戲：
+1. 添加功能升級系統（增加防火力、盾牌等）
+2. 添加背景音樂和音效
+3. 添加排行榜（存儲前 5 名高分）
+4. 支持移動設備（觸摸控制）
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 9: Canvas 進階技巧 - 迭代改進 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Canvas 進階技巧 - 迭代改進</h2>
+
+                <h3>有效的對話策略</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>精確的修改請求</h4>
+                        <p>清楚指出要修改的具體部分：「將按鈕改為綠色」而非「改進設計」</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>循序漸進的功能添加</h4>
+                        <p>先完成核心功能，然後逐步添加高級功能</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>視覺反饋請求</h4>
+                        <p>要求添加加載狀態、成功提示、錯誤警告等反饋</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>性能優化</h4>
+                        <p>要求優化代碼、減少冗餘、提升響應速度</p>
+                    </div>
+                </div>
+
+                <h3>常見改進 Prompt 模板</h3>
+                <div class="prompt-box">
+【修改樣式】
+改變背景色為深藍色，按鈕改為漸變紫色，字體調大到 20px。
+
+【添加功能】
+添加導出 CSV 功能，允許用戶下載數據表格。
+
+【優化體驗】
+添加加載動畫和成功提示消息。
+
+【修復問題】
+修復當輸入為空時的錯誤，添加輸入驗證。
+                </div>
+
+                <h3>調試技巧</h3>
+                <ul>
+                    <li>在 Canvas 中直接指出不工作的功能和預期行為</li>
+                    <li>提供具體的錯誤描述（如「點擊按鈕沒有反應」）</li>
+                    <li>要求查看瀏覽器控制台的錯誤信息</li>
+                    <li>要求添加控制台日誌以便調試</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 投影片 10: Canvas 的優勢與限制 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Canvas 的優勢與限制</h2>
+
+                <h3>核心優勢</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>零編碼成本</h4>
+                        <p>無需編程知識即可創建功能完整的應用</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>快速迭代</h4>
+                        <p>實時預覽和修改，快速驗證想法</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>創意自由</h4>
+                        <p>專注於創意和功能，AI 負責實現細節</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>學習資源</h4>
+                        <p>生成的代碼可作為學習材料</p>
+                    </div>
+                </div>
+
+                <h3>主要限制</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th style="width: 25%;">限制類型</th>
+                        <th style="width: 40%;">具體限制</th>
+                        <th style="width: 35%;">解決方案</th>
+                    </tr>
+                    <tr>
+                        <td><strong>複雜邏輯</strong></td>
+                        <td>高度複雜的業務邏輯可能生成不完美</td>
+                        <td>分解為多個小應用或與開發者合作</td>
+                    </tr>
+                    <tr>
+                        <td><strong>後端集成</strong></td>
+                        <td>難以集成複雜的後端系統</td>
+                        <td>使用前端框架或 API 集成</td>
+                    </tr>
+                    <tr>
+                        <td><strong>性能優化</strong></td>
+                        <td>大規模數據處理性能可能不佳</td>
+                        <td>要求 AI 優化或使用分頁</td>
+                    </tr>
+                    <tr>
+                        <td><strong>代碼控制</strong></td>
+                        <td>無法完全控制底層代碼</td>
+                        <td>導出代碼後手動優化</td>
+                    </tr>
+                    <tr>
+                        <td><strong>第三方庫</strong></td>
+                        <td>某些特殊庫可能不支持</td>
+                        <td>使用 CDN 或流行的開源庫</td>
+                    </tr>
+                </table>
+
+                <h3>最佳實踐</h3>
+                <ul>
+                    <li>將 Canvas 用於原型開發和快速驗證</li>
+                    <li>複雜項目應結合傳統開發</li>
+                    <li>定期備份生成的代碼</li>
+                    <li>在生產環境前進行充分測試</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 投影片 11: v0.dev 簡介 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Vercel v0.dev 簡介</h2>
+
+                <h3>什麼是 v0.dev？</h3>
+                <p>v0.dev 是 Vercel 推出的 AI 驅動前端代碼生成平台，專門生成 React 組件和完整頁面。與 Gemini Canvas 相比，v0.dev 更加專業化和商業化。</p>
+
+                <div class="box info">
+                    <strong>核心特點：</strong>
+                    <ul>
+                        <li>生成生產級別的 React 代碼</li>
+                        <li>集成 shadcn/ui 組件庫</li>
+                        <li>使用 Tailwind CSS 進行樣式</li>
+                        <li>支持多種輸入方式</li>
+                        <li>代碼可直接集成到項目</li>
+                        <li>完整的設計系統支持</li>
+                    </ul>
+                </div>
+
+                <h3>v0.dev vs Gemini Canvas</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>特性</th>
+                        <th>v0.dev</th>
+                        <th>Gemini Canvas</th>
+                    </tr>
+                    <tr>
+                        <td>代碼框架</td>
+                        <td>React + TypeScript</td>
+                        <td>HTML/CSS/JS</td>
+                    </tr>
+                    <tr>
+                        <td>CSS 框架</td>
+                        <td>Tailwind CSS</td>
+                        <td>內聯樣式/CSS</td>
+                    </tr>
+                    <tr>
+                        <td>用途</td>
+                        <td>生產項目</td>
+                        <td>快速原型</td>
+                    </tr>
+                    <tr>
+                        <td>學習曲線</td>
+                        <td>需要 React 基礎</td>
+                        <td>無需編程基礎</td>
+                    </tr>
+                    <tr>
+                        <td>定價</td>
+                        <td>免費/付費版</td>
+                        <td>免費（需 Google 帳戶）</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 投影片 12: 多模態輸入 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>多模態輸入（文字、圖片、URL）</h2>
+
+                <h3>v0.dev 支持多種輸入方式</h3>
+
+                <h3>1. 文字描述 (Text Prompt)</h3>
+                <div class="prompt-box">
+創建一個現代的登錄表單，具有以下特點：
+- 郵箱和密碼輸入框
+- 「記住我」複選框
+- 社交登錄按鈕（Google、GitHub）
+- 忘記密碼連結
+- 美麗的漸變背景
+- 暗色主題選項
+                </div>
+
+                <h3>2. 圖片上傳 (Image Upload)</h3>
+                <div class="box success">
+                    <strong>工作流程：</strong>
+                    <ul>
+                        <li>上傳設計稿或草圖圖片</li>
+                        <li>v0.dev AI 分析圖片布局</li>
+                        <li>自動生成相應的代碼</li>
+                        <li>可基於圖片風格進行迭代</li>
+                    </ul>
+                </div>
+
+                <h3>3. URL 引用 (URL Input)</h3>
+                <div class="prompt-box">
+基於 https://dribbble.com/shots/xxx 這個設計，
+生成相似風格的 React 組件
+                </div>
+
+                <h3>多模態輸入最佳實踐</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>文字 + 圖片</h4>
+                        <p>上傳草圖同時提供詳細文字說明</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>參考設計</h4>
+                        <p>提供現有設計的 URL 作為參考</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>逐步細化</h4>
+                        <p>先生成粗略版本，再通過文字迭代</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 13: React + Tailwind CSS 代碼生成 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>React + Tailwind CSS 代碼生成</h2>
+
+                <h3>v0.dev 生成的代碼結構</h3>
+                <div class="code-block">
+import React, { useState } from 'react'
+
+export default function MyComponent() {
+  const [state, setState] = useState(null)
+
+  return (
+    &lt;div className="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen"&gt;
+      {/* 組件內容 */}
+    &lt;/div&gt;
+  )
+}
+                </div>
+
+                <h3>Tailwind CSS 優勢</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>實用優先</h4>
+                        <p>無需寫 CSS，使用預定義工具類</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>一致性設計</h4>
+                        <p>自動應用統一的顏色和間距系統</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>快速響應式</h4>
+                        <p>內置響應式設計支持</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>易於定制</h4>
+                        <p>快速調整樣式無需修改代碼</p>
+                    </div>
+                </div>
+
+                <h3>常用 Tailwind 工具類範例</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>類別</th>
+                        <th>工具類示例</th>
+                        <th>說明</th>
+                    </tr>
+                    <tr>
+                        <td>布局</td>
+                        <td><code>flex grid grid-cols-3</code></td>
+                        <td>Flexbox 和 Grid 布局</td>
+                    </tr>
+                    <tr>
+                        <td>顏色</td>
+                        <td><code>bg-blue-500 text-gray-700</code></td>
+                        <td>背景和文字顏色</td>
+                    </tr>
+                    <tr>
+                        <td>間距</td>
+                        <td><code>p-4 m-2 gap-3</code></td>
+                        <td>內邊距、外邊距、間距</td>
+                    </tr>
+                    <tr>
+                        <td>響應式</td>
+                        <td><code>md:grid-cols-2 lg:p-8</code></td>
+                        <td>媒體查詢前綴</td>
+                    </tr>
+                    <tr>
+                        <td>動畫</td>
+                        <td><code>hover:bg-red-600 transition</code></td>
+                        <td>懸停和過渡效果</td>
+                    </tr>
+                </table>
+
+                <h3>將生成的代碼集成到項目</h3>
+                <div class="step-box">
+                    <strong>1.</strong> 複製生成的組件代碼
+                </div>
+                <div class="step-box">
+                    <strong>2.</strong> 粘貼到你的 React 項目
+                </div>
+                <div class="step-box">
+                    <strong>3.</strong> 根據需要修改邏輯
+                </div>
+                <div class="step-box">
+                    <strong>4.</strong> 確保已安裝 Tailwind CSS
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 14: 實作範例 - 完整活動報名網站 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>實作範例：完整活動報名網站</h2>
+
+                <h3>項目需求</h3>
+                <p>使用 v0.dev 生成一個完整的活動報名網站，包括活動列表、詳情頁和報名表單。</p>
+
+                <h3>推薦 Prompt</h3>
+                <div class="prompt-box">
+使用 React 和 Tailwind CSS 創建一個活動報名網站：
+
+頁面結構：
+1. 頂部導航欄（Logo、導航菜單、登錄按鈕）
+2. 英雄區塊（大標題、搜索功能）
+3. 活動卡片網格（活動圖片、名稱、日期、位置、價格）
+4. 活動詳情模態框（活動詳細信息、報名表單）
+
+功能需求：
+- 活動搜索和過濾
+- 響應式設計（手機、平板、桌面）
+- 報名表單驗證
+- 成功提示消息
+- 使用現代 UI 元素和漸變色
+                </div>
+
+                <h3>設計要點</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>視覺設計</h4>
+                        <ul class="feature-list">
+                            <li>使用高質量圖片展示</li>
+                            <li>清晰的信息層次</li>
+                            <li>一致的顏色方案</li>
+                            <li>充足的留白空間</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>用戶體驗</h4>
+                        <ul class="feature-list">
+                            <li>快速報名流程</li>
+                            <li>實時表單驗證</li>
+                            <li>清晰的反饋信息</li>
+                            <li>直觀的導航</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>逐步優化迭代</h3>
+                <div class="prompt-box">
+第一次迭代：添加評論區塊和用戶評分功能
+第二次迭代：添加日曆選擇器和時間段過濾
+第三次迭代：集成支付功能演示（Stripe 或 PayPal 按鈕）
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 15: AI Studio 簡介 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>AI Studio 簡介</h2>
+
+                <h3>什麼是 AI Studio？</h3>
+                <p>AI Studio 是 Google 開發的 AI 應用構建平台，提供預構建的 AI 驅動應用模板。相比 Canvas，AI Studio 更加專業和功能化，支持更複雜的 AI 應用場景。</p>
+
+                <div class="box info">
+                    <strong>核心功能：</strong>
+                    <ul>
+                        <li>模型託管和部署</li>
+                        <li>預構建應用模板</li>
+                        <li>實時數據處理</li>
+                        <li>多模態 AI 支持</li>
+                        <li>可視化編輯器</li>
+                        <li>API 集成</li>
+                    </ul>
+                </div>
+
+                <h3>AI Studio 的應用場景</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>圖像處理</h4>
+                        <p>風格轉化、圖像增強、內容生成</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>手勢識別</h4>
+                        <p>MediaPipe 集成、身體追蹤、動作檢測</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>文本分析</h4>
+                        <p>情感分析、文本分類、摘要生成</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>語音處理</h4>
+                        <p>語音識別、語音合成、翻譯</p>
+                    </div>
+                </div>
+
+                <h3>與其他平台的對比</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>平台</th>
+                        <th>主要用途</th>
+                        <th>難度級別</th>
+                        <th>適合人群</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Gemini Canvas</strong></td>
+                        <td>快速原型</td>
+                        <td>非常簡單</td>
+                        <td>初學者</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v0.dev</strong></td>
+                        <td>生產前端</td>
+                        <td>簡單-中等</td>
+                        <td>前端開發者</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AI Studio</strong></td>
+                        <td>AI 應用</td>
+                        <td>中等-高</td>
+                        <td>AI/ML 工程師</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 投影片 16: 影像風格轉化器 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>影像風格轉化器應用</h2>
+
+                <h3>項目介紹</h3>
+                <p>使用 AI Studio 和圖像生成模型，建立一個支持多種風格轉化的圖像編輯工具。</p>
+
+                <h3>支持的風格（8 種）</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>油畫風格</h4>
+                        <p>經典藝術風格，厚重筆觸效果</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>卡通化</h4>
+                        <p>簡化色彩，強化輪廓線條</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>素描風格</h4>
+                        <p>黑白素描效果，細節突出</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>水彩風格</h4>
+                        <p>流暢色彩暈染，透明水感</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>像素藝術</h4>
+                        <p>復古像素風格，低分辨率效果</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>霓虹風格</h4>
+                        <p>明亮色彩，高飽和度發光</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>黑白轉換</h4>
+                        <p>灰度轉換，保留細節對比</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>模糊效果</h4>
+                        <p>高斯模糊、動感模糊效果</p>
+                    </div>
+                </div>
+
+                <h3>技術實現</h3>
+                <ul>
+                    <li><strong>圖像上傳：</strong> 支持拖拽上傳或文件選擇</li>
+                    <li><strong>風格應用：</strong> 使用 TensorFlow.js 或 MediaPipe 進行實時處理</li>
+                    <li><strong>預覽功能：</strong> 實時預覽轉化效果</li>
+                    <li><strong>下載功能：</strong> 生成高質量輸出圖像</li>
+                    <li><strong>批量處理：</strong> 支持多張圖像同時轉化</li>
+                </ul>
+
+                <h3>推薦實現 Prompt</h3>
+                <div class="prompt-box">
+使用 Canvas 或 AI Studio 創建圖像風格轉化應用：
+- 上傳圖像功能
+- 8 個風格轉化按鈕
+- 實時預覽面板（原圖 vs 轉化圖）
+- 強度調整滑塊（0-100%）
+- 下載按鈕
+- 支持多種圖像格式
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 17: 手勢控制遊戲 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>手勢控制遊戲（Webcam + MediaPipe）</h2>
+
+                <h3>項目介紹</h3>
+                <p>利用 MediaPipe 和 WebCam 實現實時手勢識別遊戲，玩家透過手部動作控制遊戲。</p>
+
+                <h3>遊戲機制</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>手勢識別</h4>
+                        <p>使用 MediaPipe 實時檢測手位置和姿勢</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>虛擬控制</h4>
+                        <p>手勢對應虛擬控制器按鈕</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>實時反饋</h4>
+                        <p>屏幕顯示識別的手勢和指令</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>遊戲評分</h4>
+                        <p>根據准確率和反應速度計分</p>
+                    </div>
+                </div>
+
+                <h3>實現步驟</h3>
+                <div class="step-box">
+                    <strong>1. 初始化 WebCam</strong> - 獲取用戶攝像頭權限
+                </div>
+                <div class="step-box">
+                    <strong>2. 加載 MediaPipe</strong> - 導入手勢識別模型
+                </div>
+                <div class="step-box">
+                    <strong>3. 實時檢測</strong> - 每幀檢測手部位置
+                </div>
+                <div class="step-box">
+                    <strong>4. 映射控制</strong> - 將手勢映射到遊戲控制
+                </div>
+                <div class="step-box">
+                    <strong>5. 反饋提示</strong> - 顯示識別結果和分數
+                </div>
+
+                <h3>核心代碼概念</h3>
+                <div class="code-block">
+// MediaPipe 手勢識別基本框架
+const hands = new Hands({lockedAPIKey: "YOUR_API_KEY"});
+hands.onResults(onResults);
+
+camera.start();
+
+function onResults(results) {
+  if (results.multiHandLandmarks) {
+    // 處理手勢檢測結果
+    const gesture = detectGesture(results.multiHandLandmarks[0]);
+    handleGameControl(gesture);
+  }
+}
+                </div>
+
+                <h3>進階功能</h3>
+                <ul class="feature-list">
+                    <li>支持雙手控制</li>
+                    <li>手指跟蹤精度提升</li>
+                    <li>自定義手勢識別</li>
+                    <li>多人遊戲支持</li>
+                    <li>數據記錄和分析</li>
+                </ul>
+
+                <h3>Prompt 示例</h3>
+                <div class="prompt-box">
+使用 MediaPipe 和 WebCam 創建手勢遊戲：
+- 檢測 5 種基礎手勢（拳頭、展開、勝利手勢等）
+- 顯示即時手勢識別結果
+- 根據手勢控制屏幕上的對象移動
+- 計時挑戰：在 30 秒內做出盡可能多的正確手勢
+- 排行榜顯示高分
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 18: 兩種部署方式比較 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🚀 兩種部署方式比較</h2>
+
+                <div class="box info">
+                    <strong>完成作品後，如何讓別人看到？</strong><br>
+                    VibeCoding 製作的應用有兩種主要的分享方式，各有優缺點。
+                </div>
+
+                <h3>方式一：Gemini 共享網址</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>📤 操作方式</h4>
+                        <p>在 Gemini Canvas 中點擊「Share」按鈕，直接生成分享連結</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>✅ 優點</h4>
+                        <p>• 零設定，一鍵分享<br>
+                        • 無需額外帳號<br>
+                        • 即時更新同步</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>❌ 缺點</h4>
+                        <p>• 連結較長不易記憶<br>
+                        • 無法自訂網域<br>
+                        • 依賴 Google 服務</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">方式二：外部網站部署（Netlify / Vercel / GitHub Pages）</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>📤 操作方式</h4>
+                        <p>下載程式碼，上傳到 Netlify、Vercel 或 GitHub Pages</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>✅ 優點</h4>
+                        <p>• 自訂網域名稱<br>
+                        • 更專業的呈現<br>
+                        • 完整控制權</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>❌ 缺點</h4>
+                        <p>• 需要額外設定<br>
+                        • 需註冊平台帳號<br>
+                        • 更新需重新部署</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">快速比較表</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>比較項目</th>
+                        <th>Gemini 共享</th>
+                        <th>外部部署</th>
+                    </tr>
+                    <tr>
+                        <td><strong>設定難度</strong></td>
+                        <td>極簡單（1 分鐘）</td>
+                        <td>中等（10-30 分鐘）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>自訂網域</strong></td>
+                        <td>不支援</td>
+                        <td>支援</td>
+                    </tr>
+                    <tr>
+                        <td><strong>適合用途</strong></td>
+                        <td>快速分享、測試</td>
+                        <td>正式發布、作品集</td>
+                    </tr>
+                    <tr>
+                        <td><strong>費用</strong></td>
+                        <td>免費</td>
+                        <td>免費方案可用</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 投影片 19: 資料儲存與 AI 功能設定 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🗄️ 資料儲存選項比較</h2>
+
+                <div class="box warning">
+                    <strong>重要觀念：</strong>如果你的應用需要「儲存資料」（如用戶註冊、訂單記錄），就需要選擇適合的儲存方式。
+                </div>
+
+                <h3>三種主要儲存方式</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>📊 Google Sheet + GAS</h4>
+                        <p><strong>優點：</strong>免費、熟悉、易管理<br>
+                        <strong>缺點：</strong>效能有限、不適合大量資料<br>
+                        <strong>適合：</strong>小型專案、個人使用</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🔥 Firebase</h4>
+                        <p><strong>優點：</strong>即時同步、擴展性好<br>
+                        <strong>缺點：</strong>需學習設定、有用量限制<br>
+                        <strong>適合：</strong>中型專案、需即時更新</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>🗃️ 瀏覽器 LocalStorage</h4>
+                        <p><strong>優點：</strong>最簡單、無需設定<br>
+                        <strong>缺點：</strong>僅限單一裝置、會被清除<br>
+                        <strong>適合：</strong>個人工具、測試用途</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">儲存方式選擇指南</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>需求情境</th>
+                        <th>推薦方案</th>
+                        <th>原因</th>
+                    </tr>
+                    <tr>
+                        <td>個人記帳、待辦清單</td>
+                        <td>LocalStorage</td>
+                        <td>最簡單，不需後端</td>
+                    </tr>
+                    <tr>
+                        <td>團購點餐、活動報名</td>
+                        <td>Google Sheet + GAS</td>
+                        <td>方便查看和管理資料</td>
+                    </tr>
+                    <tr>
+                        <td>多人即時協作、聊天</td>
+                        <td>Firebase</td>
+                        <td>即時同步功能</td>
+                    </tr>
+                    <tr>
+                        <td>大型商業應用</td>
+                        <td>專業資料庫</td>
+                        <td>效能和安全性考量</td>
+                    </tr>
+                </table>
+
+                <div class="box success">
+                    <strong>小提示：</strong>初學者建議從 LocalStorage 或 Google Sheet 開始，等熟悉後再學習 Firebase。
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 20: 建置時該如何選擇 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>🤔 建置時該如何選擇？</h2>
+
+                <div class="box info">
+                    <strong>決策流程圖：</strong>根據你的需求，快速找到最適合的工具組合！
+                </div>
+
+                <h3>Step 1：你的作品需要儲存資料嗎？</h3>
+                <div class="two-column">
+                    <div class="step-box">
+                        <strong>不需要 → 純前端應用</strong><br>
+                        • 計算機、時鐘、小遊戲<br>
+                        • 靜態展示頁面<br>
+                        • 單純的互動效果<br>
+                        <br>
+                        <strong>推薦：</strong>Gemini Canvas → 直接分享
+                    </div>
+                    <div class="step-box">
+                        <strong>需要 → 需要後端支援</strong><br>
+                        • 會員系統、訂單管理<br>
+                        • 資料收集表單<br>
+                        • 多人協作功能<br>
+                        <br>
+                        <strong>推薦：</strong>選擇儲存方案（見下方）
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">Step 2：你需要多少人使用？</h3>
+                <div class="concept-grid">
+                    <div class="concept-card" style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);">
+                        <h4>👤 只有自己</h4>
+                        <p>LocalStorage 即可<br>簡單快速，無需設定</p>
+                    </div>
+                    <div class="concept-card" style="background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);">
+                        <h4>👥 小團隊 (5-50人)</h4>
+                        <p>Google Sheet + GAS<br>方便管理，免費夠用</p>
+                    </div>
+                    <div class="concept-card" style="background: linear-gradient(135deg, #ff9800 0%, #e65100 100%);">
+                        <h4>🌐 大量用戶 (50人以上)</h4>
+                        <p>Firebase 或專業方案<br>效能好，可擴展</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 25px;">Step 3：你需要專業的網址嗎？</h3>
+                <div class="two-column">
+                    <div class="step-box">
+                        <strong>不需要 →</strong> Gemini 分享連結<br>
+                        快速分享給朋友或同事測試
+                    </div>
+                    <div class="step-box">
+                        <strong>需要 →</strong> Netlify / Vercel 部署<br>
+                        可設定自訂網域，更專業
+                    </div>
+                </div>
+
+                <div class="box success" style="margin-top: 25px;">
+                    <strong>黃金法則：</strong>先用最簡單的方案開始，等確定需求後再升級！不要一開始就選最複雜的方案。
+                </div>
+            </div>
+        </div>
+
+        <!-- 投影片 21: Part 3 總結 + 工具對比 + 進入 Part 4 -->
+        <div class="slide">
+            <div class="content-card">
+                <h2>Part 3 總結</h2>
+
+                <h3>三大工具對比總結</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>特性</th>
+                        <th>Gemini Canvas</th>
+                        <th>v0.dev</th>
+                        <th>AI Studio</th>
+                    </tr>
+                    <tr>
+                        <td><strong>使用難度</strong></td>
+                        <td>極簡單</td>
+                        <td>簡單</td>
+                        <td>中等</td>
+                    </tr>
+                    <tr>
+                        <td><strong>代碼質量</strong></td>
+                        <td>快速原型</td>
+                        <td>生產級別</td>
+                        <td>專業級別</td>
+                    </tr>
+                    <tr>
+                        <td><strong>主要用途</strong></td>
+                        <td>快速想法驗證</td>
+                        <td>專業前端開發</td>
+                        <td>AI 應用開發</td>
+                    </tr>
+                    <tr>
+                        <td><strong>學習成本</strong></td>
+                        <td>幾分鐘上手</td>
+                        <td>需了解 React</td>
+                        <td>需要 AI 基礎</td>
+                    </tr>
+                    <tr>
+                        <td><strong>推薦人群</strong></td>
+                        <td>非技術人士、設計師</td>
+                        <td>前端工程師、初創公司</td>
+                        <td>AI 研究者、企業</td>
+                    </tr>
+                </table>
+
+                <h3>關鍵要點回顧</h3>
+                <div class="concept-grid">
+                    <div class="concept-card">
+                        <h4>無程式碼革命</h4>
+                        <p>AI 正在民主化軟件開發，讓所有人都能成為開發者</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>快速迭代</h4>
+                        <p>從想法到原型的時間縮短至分鐘級</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>創意優先</h4>
+                        <p>專注於創意而非技術實現細節</p>
+                    </div>
+                    <div class="concept-card">
+                        <h4>持續進化</h4>
+                        <p>AI 工具不斷完善，能力越來越強</p>
+                    </div>
+                </div>
+
+                <h3>學習路徑建議</h3>
+                <ol style="margin-left: 30px;">
+                    <li><strong>初級：</strong> 從 Gemini Canvas 開始，熟悉 AI 輔助開發流程</li>
+                    <li><strong>中級：</strong> 學習 React 基礎後嘗試 v0.dev</li>
+                    <li><strong>高級：</strong> 深入 AI Studio 和自定義模型開發</li>
+                    <li><strong>整合：</strong> 結合三大工具創建完整應用</li>
+                </ol>
+
+                <h3 style="margin-top: 40px; text-align: center;">準備進入 Part 4 了嗎？</h3>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="button-link" onclick="goToSlide(currentSlide + 1)">
+                        進入 Part 4: AI 驅動的數據分析和可視化
+                    </button>
+                </div>
+
+                <div class="box success" style="margin-top: 30px;">
+                    <strong>恭喜！</strong> 你已經完成了 Part 3 的學習。在接下來的 Part 4 中，我們將探索如何使用 AI 進行數據分析、創建交互式儀表板，以及構建智能報告系統。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 導航箭頭 -->
+    <button class="nav-arrow prev-arrow" onclick="previousSlide()" id="prevBtn">&lt;</button>
+    <button class="nav-arrow next-arrow" onclick="nextSlide()" id="nextBtn">&gt;</button>
+
+    <!-- 指示器 -->
+    <div class="indicators" id="indicators"></div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+
+        // 初始化指示器
+        function initIndicators() {
+            const container = document.getElementById('indicators');
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                if (index === 0) dot.classList.add('active');
+                dot.onclick = () => goToSlide(index);
+                container.appendChild(dot);
+            });
+        }
+
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            if (n >= slides.length) currentSlide = slides.length - 1;
+            if (n < 0) currentSlide = 0;
+
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === slides.length - 1;
+
+            // 更新導航欄標題
+            const titles = [
+                'Part 3: 無程式碼前端生成',
+                '無程式碼前端開發概述',
+                'Gemini Canvas 簡介',
+                '啟動 Canvas - 對話式開發',
+                '實作案例 1：活動費用計算器',
+                '實作案例 2：BMI 健康追蹤器',
+                '實作案例 3：氣象觀測儀表板',
+                '實作案例 4：Space Invaders 遊戲',
+                'Canvas 進階技巧 - 迭代改進',
+                'Canvas 的優勢與限制',
+                'Vercel v0.dev 簡介',
+                '多模態輸入（文字、圖片、URL）',
+                'React + Tailwind CSS 代碼生成',
+                '實作範例：完整活動報名網站',
+                'AI Studio 簡介',
+                '影像風格轉化器應用',
+                '手勢控制遊戲（Webcam + MediaPipe）',
+                '兩種部署方式比較',
+                '資料儲存選項比較',
+                '建置時該如何選擇？',
+                'Part 3 總結'
+            ];
+            document.querySelector('.nav-title').textContent = titles[currentSlide];
+        }
+
+        function nextSlide() {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+
+        function previousSlide() {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+
+        function goToSlide(n) {
+            currentSlide = n;
+            showSlide(currentSlide);
+        }
+
+        // 鍵盤控制
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+
+        // 初始化
+        initIndicators();
+        showSlide(0);
+    </script>
+</body>
+</html>
