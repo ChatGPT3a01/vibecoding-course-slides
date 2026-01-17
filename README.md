@@ -41,40 +41,77 @@ VibeCoding_簡報專案/
 ## 📖 課程內容概覽
 
 ### Part 0：課程導覽 🎯
-- 課程理念、架構、學習路徑、工具生態
+- 課程理念與學習目標
+- 完整架構與學習路徑
+- AI 協作開發工具生態系統
+- 適合對象與學習建議
 
 ### Part 1：VibeCoding 基礎與提示工程 💬
-- 核心思維、黃金公式、Gemini & Gems
+- VibeCoding 核心思維與開發理念
+- 提示工程黃金公式（5C + 4P）
+- Google Gemini 實戰應用
+- Gems 自訂 AI 助理創建
 
 ### Part 2：Cursor IDE 🔥
-- AI 代碼生成、代碼修改與重構
+- Cursor AI 原生編輯器深度整合
+- AI 代碼生成與智慧補全
+- 代碼修改、重構與除錯
+- Composer 多檔案協作開發
 
 ### Part 3：GitHub Copilot 🛠️
-- 六大核心功能、程式碼建議
+- 六大核心功能完整解析
+- 程式碼建議與自動補全
+- Copilot Chat 對話式開發
+- VS Code 整合實戰
 
 ### Part 4：Windsurf 🔥
-- Cascade、Flow Mode、實作專案
+- Cascade 智慧開發流程
+- Flow Mode 沉浸式編程體驗
+- 多模態開發環境設定
+- 完整實作專案演練
 
 ### Part 5：Antigravity ✨
-- Agent Mode、自動測試、教學工具箱
+- Agent Mode 自主開發模式
+- 自動測試與品質保證
+- 教學工具箱應用
+- 下一代 AI 協作平台體驗
 
 ### Part 6：無程式碼前端生成 🎨
-- Gemini Canvas、v0.dev、AI Studio
+- Gemini Canvas 視覺化開發（重點章節）
+- v0.dev Vercel AI 驅動的 UI 生成
+- AI Studio 快速原型設計
+- 元件庫與設計系統整合
 
 ### Part 7：全端應用秒速生成 ⚡
-- Lovable AI、資料庫整合、部署
+- Lovable AI 一句話生成完整應用
+- 資料庫整合與 API 設計
+- 使用者認證與權限管理
+- 一鍵部署與版本管理
 
 ### Part 8：進階應用與實戰 🚀
-- 360°、影片、3D、手勢控制、UI/UX
+- 360° 全景互動應用開發
+- AI 影片生成與剪輯
+- 3D 模型與 AR/VR 應用
+- 手勢控制與語音互動
+- UI/UX 最佳實踐案例
 
 ### Part 9：AI 代理人與自動化 🤖
-- GAS、NotebookLM、AI Agent
+- Google Apps Script 自動化工作流
+- NotebookLM AI 知識管理與學習助手
+- AI Agent 實作案例
+- 多代理人協作系統
 
 ### Part 10：課程總結與展望 🎓
-- 核心收穫、工具選擇、AI 時代定位
+- 核心知識回顧與整理
+- 工具選擇矩陣與比較
+- AI 時代職涯定位
+- 持續學習資源與社群
 
 ### Part 11：部署教學 ✨
-- Google Sites、Netlify、GAS
+- Google Sites 快速部署
+- Netlify 自動化部署流程
+- Google Apps Script 網頁應用
+- 自訂網域與 HTTPS 設定
 
 ## ⌨️ 快捷鍵說明
 
