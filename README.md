@@ -1,8 +1,14 @@
 # VibeCoding 氣圍編碼 - 完整教學簡報
 
-[![GitHub](https://img.shields.io/badge/GitHub-View%20on%20GitHub-blue?logo=github)](https://github.com)
+<div align="center">
+
+### 👉 [點擊這裡線上觀看簡報](https://chatgpt3a01.github.io/vibecoding-course-slides/) 👈
+
+[![GitHub](https://img.shields.io/badge/GitHub-View%20on%20GitHub-blue?logo=github)](https://github.com/ChatGPT3a01/vibecoding-course-slides)
 [![License](https://img.shields.io/badge/License-Educational%20Use-green)]()
 [![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red)]()
+
+</div>
 
 > **AI 智慧設計與高效創意實戰班** - 從「對話」出發，跨越程式障礙
 
