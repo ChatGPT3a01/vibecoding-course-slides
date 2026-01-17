@@ -132,14 +132,49 @@ VibeCoding_簡報專案/
 ## 👨‍🏫 課程講師
 
 <div align="center">
-<img src="作者資訊.png" alt="曾慶良 主任 - 阿亮老師" width="600">
+
+### 曾慶良 主任（阿亮老師）
+
+<img src="作者資訊.png" width="600" alt="作者資訊">
+
+<br>
+
+<table>
+<tr>
+<td width="50%">
+
+**📌 現任職務**
+
+🎓 新興科技推廣中心主任<br>
+🎓 教育部學科中心研究教師<br>
+🎓 臺北市資訊教育輔導員
+
+</td>
+<td width="50%">
+
+**🏆 獲獎紀錄**
+
+🥇 2024年 教育部人工智慧講師認證<br>
+🥇 2022、2023年 指導學生XR專題競賽特優<br>
+🥇 2022年 VR教材開發教師組特優<br>
+🥇 2019年 百大資訊人才獎<br>
+🥇 2018、2019年 親子天下創新100教師<br>
+🥇 2018年 臺北市特殊優良教師<br>
+🥇 2017年 教育部行動學習優等
+
+</td>
+</tr>
+</table>
+
+<br>
+
+### 📞 聯絡方式
+
+[![YouTube](https://img.shields.io/badge/YouTube-@Liang--yt02-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/@Liang-yt02)
+[![Facebook](https://img.shields.io/badge/Facebook-3A科技研究社-blue?style=for-the-badge&logo=facebook)](https://www.facebook.com/groups/2754139931432955)
+[![Email](https://img.shields.io/badge/Email-3a01chatgpt@gmail.com-green?style=for-the-badge&logo=gmail)](mailto:3a01chatgpt@gmail.com)
+
 </div>
-
-## 🤝 社群連結
-
-- 📘 [Facebook 粉絲專頁](https://www.facebook.com/?locale=zh_TW)
-- 🎥 [YouTube 頻道 - 阿亮老師](https://www.youtube.com/@Liang-yt02)
-- 👥 [3A 科技研究社](https://www.facebook.com/groups/2754139931432955?locale=zh_TW)
 
 ## 📝 授權說明
 
