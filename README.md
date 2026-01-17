@@ -129,6 +129,12 @@ VibeCoding_簡報專案/
 | `End` | 跳到最後一張 |
 | `ESC` | 返回首頁 |
 
+## 👨‍🏫 課程講師
+
+<div align="center">
+<img src="作者資訊.png" alt="曾慶良 主任 - 阿亮老師" width="600">
+</div>
+
 ## 🤝 社群連結
 
 - 📘 [Facebook 粉絲專頁](https://www.facebook.com/?locale=zh_TW)
